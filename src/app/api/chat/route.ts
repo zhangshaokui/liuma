@@ -10,6 +10,7 @@ import {
 } from "ai";
 
 import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
+import { SUPER_EMPLOYEE_MODULES } from "@/lib/super-employee-modules";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
@@ -182,7 +183,30 @@ export async function POST(request: Request) {
       >
     )?.agentId;
 
-    const agent = await rememberAgentAction(agentId, session.user.id);
+    // Handle Super Employee modules specially
+    let agent = await rememberAgentAction(agentId, session.user.id);
+
+    // If agent not found in database, check if it's a Super Employee module
+    if (!agent && agentId && agentId in SUPER_EMPLOYEE_MODULES) {
+      const moduleConfig = SUPER_EMPLOYEE_MODULES[agentId as keyof typeof SUPER_EMPLOYEE_MODULES];
+      agent = {
+        id: agentId,
+        name: moduleConfig.name,
+        description: "Super Employee - " + moduleConfig.name,
+        icon: {
+          type: "emoji",
+          value: "🤖",
+        },
+        userId: "super-employee",
+        visibility: "public",
+        instructions: {
+          role: moduleConfig.role,
+          systemPrompt: moduleConfig.systemPrompt,
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any;
+    }
 
     if (agent?.instructions?.mentions) {
       mentions.push(...agent.instructions.mentions);

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { AppSidebarMenus } from "./app-sidebar-menus";
+import { AppSidebarDepartments } from "./app-sidebar-departments";
 import { AppSidebarAgents } from "./app-sidebar-agents";
 import { AppSidebarThreads } from "./app-sidebar-threads";
 import { SidebarHeaderShared } from "./sidebar-header";
@@ -51,6 +52,7 @@ export function AppSidebar({
       <SidebarContent className="mt-2 overflow-hidden relative">
         <div className="flex flex-col overflow-y-auto">
           <AppSidebarMenus user={user} />
+          <AppSidebarDepartments />
           <AppSidebarAgents userRole={userRole} />
           <AppSidebarThreads />
         </div>

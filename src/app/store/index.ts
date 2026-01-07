@@ -50,6 +50,7 @@ export interface AppState {
   openShortcutsPopup: boolean;
   openChatPreferences: boolean;
   openUserSettings: boolean;
+  openAISettings: boolean; // AI员工设置对话框
   mcpCustomizationPopup?: MCPServerInfo & { id: string };
   temporaryChat: {
     isOpen: boolean;
@@ -85,6 +86,7 @@ const initialState: AppState = {
   toolChoice: "auto",
   allowedMcpServers: undefined,
   openUserSettings: false,
+  openAISettings: false, // AI员工设置对话框初始状态
   allowedAppDefaultToolkit: [
     AppDefaultToolkit.Code,
     AppDefaultToolkit.Visualization,

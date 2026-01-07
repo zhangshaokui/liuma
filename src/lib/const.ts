@@ -51,6 +51,7 @@ export const BASE_THEMES = [
   "vintage-vinyl",
   "misty-harbor",
   "zen-garden",
+  "super-employee",
 ];
 
 export const OAUTH_REQUIRED_CODE = "OAUTH_REQUIRED";

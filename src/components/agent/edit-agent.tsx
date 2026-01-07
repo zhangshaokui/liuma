@@ -42,6 +42,8 @@ import {
 } from "lib/ai/agent/example";
 import { notify } from "lib/notify";
 
+const SUPER_EMPLOYEE_CUSTOM_MARKER = "__SUPER_EMPLOYEE_CUSTOM__";
+
 const defaultConfig = (): PartialBy<
   Omit<Agent, "createdAt" | "updatedAt" | "userId">,
   "id"
@@ -92,7 +94,25 @@ export default function EditAgent({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Initialize agent state with initial data or defaults
-  const [agent, setAgent] = useObjectState(initialAgent || defaultConfig());
+  // 如果描述包含标记，先过滤掉标记用于显示
+  const initialAgentForDisplay = useMemo(() => {
+    if (!initialAgent) return undefined;
+    const isCustomEmployee = initialAgent.description?.includes(SUPER_EMPLOYEE_CUSTOM_MARKER);
+    if (isCustomEmployee) {
+      return {
+        ...initialAgent,
+        description: initialAgent.description?.replace(SUPER_EMPLOYEE_CUSTOM_MARKER, '').trim() || '',
+      };
+    }
+    return initialAgent;
+  }, [initialAgent]);
+
+  const [agent, setAgent] = useObjectState(initialAgentForDisplay || defaultConfig());
+  
+  // 记录原始描述是否包含标记（用于保存时恢复）
+  const isCustomEmployee = useMemo(() => {
+    return initialAgent?.description?.includes(SUPER_EMPLOYEE_CUSTOM_MARKER) || false;
+  }, [initialAgent]);
 
   const { toggleBookmark, isLoading: isBookmarkToggleLoadingFn } = useBookmark({
     itemType: "agent",
@@ -159,8 +179,13 @@ export default function EditAgent({
 
   const saveAgent = useCallback(() => {
     if (initialAgent) {
+      // 如果是自定义AI员工，需要在保存时恢复标记
+      const agentToSave = isCustomEmployee && agent.description
+        ? { ...agent, description: `${agent.description.trim()}${SUPER_EMPLOYEE_CUSTOM_MARKER}` }
+        : agent;
+      
       safe(() => setIsSaving(true))
-        .map(() => AgentUpdateSchema.parse({ ...agent }))
+        .map(() => AgentUpdateSchema.parse({ ...agentToSave }))
         .map(JSON.stringify)
         .map(async (body) =>
           fetcher(`/api/agent/${initialAgent.id}`, {
@@ -193,7 +218,7 @@ export default function EditAgent({
         .ifFail(handleErrorWithToast)
         .watch(() => setIsSaving(false));
     }
-  }, [agent, userId, mutateAgents, router, initialAgent, t]);
+  }, [agent, userId, mutateAgents, router, initialAgent, isCustomEmployee, t]);
 
   const updateVisibility = useCallback(
     async (visibility: Visibility) => {

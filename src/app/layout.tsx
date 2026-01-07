@@ -19,9 +19,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "muniu-chatbot",
+  title: "better-chatbot",
   description:
-    "Muniu Chatbot is a chatbot that uses the Tools to answer questions.",
+    "Better Chatbot is a chatbot that uses the Tools to answer questions.",
 };
 
 export default async function RootLayout({

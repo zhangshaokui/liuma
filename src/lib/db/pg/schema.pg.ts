@@ -374,3 +374,53 @@ export const ChatExportCommentTable = pgTable("chat_export_comment", {
 export type ArchiveEntity = typeof ArchiveTable.$inferSelect;
 export type ArchiveItemEntity = typeof ArchiveItemTable.$inferSelect;
 export type BookmarkEntity = typeof BookmarkTable.$inferSelect;
+
+// Department and Group tables
+export const DepartmentTable = pgTable("department", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  name: text("name").notNull(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => UserTable.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const GroupTable = pgTable("group", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  name: text("name").notNull(),
+  departmentId: uuid("department_id")
+    .notNull()
+    .references(() => DepartmentTable.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => UserTable.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const GroupAgentTable = pgTable(
+  "group_agent",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => GroupTable.id, { onDelete: "cascade" }),
+    agentId: text("agent_id").notNull(), // 改为text类型，支持默认AI员工（字符串ID）和自定义智能体（UUID）
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    unique().on(table.groupId, table.agentId),
+    index("group_agent_group_id_idx").on(table.groupId),
+    index("group_agent_agent_id_idx").on(table.agentId),
+  ],
+);
+
+export type DepartmentEntity = typeof DepartmentTable.$inferSelect;
+export type GroupEntity = typeof GroupTable.$inferSelect;
+export type GroupAgentEntity = typeof GroupAgentTable.$inferSelect;

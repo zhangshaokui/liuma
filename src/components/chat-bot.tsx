@@ -51,9 +51,12 @@ import { useThreadFileUploader } from "@/hooks/use-thread-file-uploader";
 import { useFileDragOverlay } from "@/hooks/use-file-drag-overlay";
 
 type Props = {
+  agent?: any;
   threadId: string;
   initialMessages: Array<UIMessage>;
   selectedChatModel?: string;
+  isNewSE?: boolean;
+  moduleId?: string;
 };
 
 const LightRays = dynamic(() => import("ui/light-rays"), {
@@ -70,7 +73,7 @@ const firstTimeStorage = getStorageManager("IS_FIRST");
 const isFirstTime = firstTimeStorage.get() ?? true;
 firstTimeStorage.set(false);
 
-export default function ChatBot({ threadId, initialMessages }: Props) {
+export default function ChatBot({ threadId, initialMessages, agent, isNewSE, moduleId }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const { uploadFiles } = useThreadFileUploader(threadId);
@@ -362,6 +365,33 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
       }));
     }
   }, [pendingThreadMention, threadId, appStoreMutate]);
+useEffect(() => {
+  if (agent && threadId) {
+    // Save thread ID for Super Employee modules
+    if (isNewSE && moduleId && typeof window !== "undefined") {
+      const storageKey = `super-employee-thread-${moduleId}`;
+      localStorage.setItem(storageKey, threadId);
+    }
+
+    appStoreMutate((prev) => ({
+      threadMentions: {
+        ...prev.threadMentions,
+        [threadId]: [
+          {
+            type: "agent",
+            name: agent.name,
+            description: agent.description,
+            agentId: agent.id,
+            icon: {
+              type: "emoji",
+              value: "🤖",
+            },
+          },
+        ],
+      },
+    }));
+  }
+}, [agent, threadId, appStoreMutate]);
 
   useEffect(() => {
     if (isInitialThreadEntry)
