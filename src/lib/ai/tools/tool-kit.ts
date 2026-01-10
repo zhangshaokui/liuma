@@ -2,7 +2,7 @@ import { createPieChartTool } from "./visualization/create-pie-chart";
 import { createBarChartTool } from "./visualization/create-bar-chart";
 import { createLineChartTool } from "./visualization/create-line-chart";
 import { createTableTool } from "./visualization/create-table";
-import { exaSearchTool, exaContentsTool } from "./web/web-search";
+import { exaSearchTool, exaContentsTool } from "./web";
 import { AppDefaultToolkit, DefaultToolName } from ".";
 import { Tool } from "ai";
 import { httpFetchTool } from "./http/fetch";

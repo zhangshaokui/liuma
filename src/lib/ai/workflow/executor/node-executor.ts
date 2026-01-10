@@ -29,7 +29,7 @@ import { DefaultToolName } from "lib/ai/tools";
 import {
   exaSearchToolForWorkflow,
   exaContentsToolForWorkflow,
-} from "lib/ai/tools/web/web-search";
+} from "lib/ai/tools/web";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
 /**

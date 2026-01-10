@@ -1,7 +1,7 @@
 "use client";
 
 import { ToolUIPart } from "ai";
-import { ExaSearchResponse } from "lib/ai/tools/web/web-search";
+import type { ExaSearchResponse } from "lib/ai/tools/web";
 import equal from "lib/equal";
 import { notify } from "lib/notify";
 import { cn, toAny } from "lib/utils";

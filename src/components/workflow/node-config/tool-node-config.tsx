@@ -27,7 +27,7 @@ import {
   exaSearchTool,
   exaContentsSchema,
   exaContentsTool,
-} from "lib/ai/tools/web/web-search";
+} from "lib/ai/tools/web";
 import { DefaultToolName } from "lib/ai/tools";
 
 export const ToolNodeDataConfig = memo(function ({
