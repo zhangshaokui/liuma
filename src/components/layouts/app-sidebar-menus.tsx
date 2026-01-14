@@ -200,19 +200,6 @@ export function AppSidebarMenus({ user }: { user?: BasicUser }) {
           </Tooltip>
         </SidebarMenu>
 
-        {/* Agent Store - For All Users */}
-        <SidebarMenu>
-          <Tooltip>
-            <SidebarMenuItem>
-              <Link href="/agent-store">
-                <SidebarMenuButton className="font-semibold">
-                  <FolderSearchIcon className="size-4" />
-                  智能体商店
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          </Tooltip>
-        </SidebarMenu>
       </SidebarGroupContent>
       <ArchiveDialog
         open={addArchiveDialogOpen}
