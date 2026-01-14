@@ -36,7 +36,6 @@ export function AgentsList({
 }: AgentsListProps) {
   const t = useTranslations();
   const mutateAgents = useMutateAgents();
-  const { toggleEmployee, isLoading: isEmployeeLoading } = useEmployeeActions();
   const [deletingAgentLoading, setDeletingAgentLoading] = useState<
     string | null
   >(null);
@@ -93,14 +92,6 @@ export function AgentsList({
       .watch(() => setVisibilityChangeLoading(null));
   };
 
-  const toggleEmployeeAction = async (agentId: string, isEmployee: boolean) => {
-    try {
-      await toggleEmployee({ id: agentId, isEmployee });
-      toast.success(isEmployee ? "已移出员工列表" : "已添加为员工");
-    } catch (err) {
-      handleErrorWithToast(err instanceof Error ? err : new Error(String(err)));
-    }
-  };
 
   const deleteAgent = async (agentId: string) => {
     const ok = await notify.confirm({
