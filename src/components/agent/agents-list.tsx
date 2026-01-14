@@ -19,6 +19,7 @@ import { handleErrorWithToast } from "ui/shared-toast";
 import { safe } from "ts-safe";
 import { canCreateAgent } from "lib/auth/client-permissions";
 import { AddToStoreDialog } from "@/components/agent/add-to-store-dialog";
+import { useEmployeeActions } from "@/hooks/queries/use-employee-actions";
 
 interface AgentsListProps {
   initialMyAgents: AgentSummary[];
@@ -35,6 +36,7 @@ export function AgentsList({
 }: AgentsListProps) {
   const t = useTranslations();
   const mutateAgents = useMutateAgents();
+  const { toggleEmployee, isLoading: isEmployeeLoading } = useEmployeeActions();
   const [deletingAgentLoading, setDeletingAgentLoading] = useState<
     string | null
   >(null);
@@ -78,6 +80,14 @@ export function AgentsList({
       .watch(() => setVisibilityChangeLoading(null));
   };
 
+  const toggleEmployeeAction = async (agentId: string, isEmployee: boolean) => {
+    try {
+      await toggleEmployee({ id: agentId, isEmployee });
+      toast.success(isEmployee ? "已移出员工列表" : "已添加为员工");
+    } catch (err) {
+      handleErrorWithToast(err instanceof Error ? err : new Error(String(err)));
+    }
+  };
 
   const deleteAgent = async (agentId: string) => {
     const ok = await notify.confirm({
@@ -170,6 +180,9 @@ export function AgentsList({
                 isDeleteLoading={deletingAgentLoading === agent.id}
                 onDelete={deleteAgent}
                 hideVisibilityAndBookmark={true}
+                isEmployee={(agent as any).isEmployee || false}
+                onEmployeeToggle={toggleEmployeeAction}
+                isEmployeeToggleLoading={isEmployeeLoading(agent.id)}
                 onAddToStore={
                   isAdmin
                     ? () => {
