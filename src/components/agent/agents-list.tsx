@@ -7,7 +7,6 @@ import { Button } from "ui/button";
 import { Plus, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { BackgroundPaths } from "ui/background-paths";
-import { useBookmark } from "@/hooks/queries/use-bookmark";
 import { useMutateAgents } from "@/hooks/queries/use-agents";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -57,19 +56,6 @@ export function AgentsList({
   const myAgents =
     allAgents?.filter((agent: AgentSummary) => agent.userId === userId) ||
     initialMyAgents;
-
-  const sharedAgents =
-    allAgents?.filter((agent: AgentSummary) => agent.userId !== userId) ||
-    initialSharedAgents;
-
-  const { toggleBookmark: toggleBookmarkHook, isLoading: isBookmarkLoading } =
-    useBookmark({
-      itemType: "agent",
-    });
-
-  const toggleBookmark = async (agentId: string, isBookmarked: boolean) => {
-    await toggleBookmarkHook({ id: agentId, isBookmarked });
-  };
 
   const updateVisibility = async (agentId: string, visibility: Visibility) => {
     safe(() => setVisibilityChangeLoading(agentId))
@@ -198,45 +184,7 @@ export function AgentsList({
         </div>
       )}
 
-      {/* Shared/Available Agents Section */}
-      <div className="flex flex-col gap-4 mt-8">
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">
-            {canCreate ? t("Agent.sharedAgents") : t("Agent.availableAgents")}
-          </h2>
-          <div className="flex-1 h-px bg-border" />
-        </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {sharedAgents.map((agent) => (
-            <ShareableCard
-              key={agent.id}
-              type="agent"
-              item={agent}
-              isOwner={false}
-              href={`/agent/${agent.id}`}
-              onBookmarkToggle={toggleBookmark}
-              isBookmarkToggleLoading={isBookmarkLoading(agent.id)}
-            />
-          ))}
-          {sharedAgents.length === 0 && (
-            <Card className="col-span-full bg-transparent border-none">
-              <CardHeader className="text-center py-12">
-                <CardTitle>
-                  {canCreate
-                    ? t("Agent.noSharedAgents")
-                    : t("Agent.noAvailableAgents")}
-                </CardTitle>
-                <CardDescription>
-                  {canCreate
-                    ? t("Agent.noSharedAgentsDescription")
-                    : t("Agent.noAvailableAgentsDescription")}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          )}
-        </div>
-      </div>
     </div>
   );
 
