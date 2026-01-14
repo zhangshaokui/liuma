@@ -184,21 +184,19 @@ export function AgentsList({
         </div>
       )}
 
-
+      {isAddToStoreDialogOpen && selectedAgentForStore && (
+        <AddToStoreDialog
+          agentId={selectedAgentForStore!.id}
+          agentName={selectedAgentForStore!.name}
+          open={isAddToStoreDialogOpen}
+          onOpenChange={setIsAddToStoreDialogOpen}
+          onAdded={() => {
+            setIsAddToStoreDialogOpen(false);
+            setSelectedAgentForStore(null);
+            setRefreshKey(prev => prev + 1);
+          }}
+        />
+      )}
     </div>
   );
-
-  {isAddToStoreDialogOpen && selectedAgentForStore && (
-    <AddToStoreDialog
-      agentId={selectedAgentForStore!.id}
-      agentName={selectedAgentForStore!.name}
-      open={isAddToStoreDialogOpen}
-      onOpenChange={setIsAddToStoreDialogOpen}
-      onAdded={() => {
-        setIsAddToStoreDialogOpen(false);
-        setSelectedAgentForStore(null);
-        setRefreshKey(prev => prev + 1);
-      }}
-    />
-  )}
 }
