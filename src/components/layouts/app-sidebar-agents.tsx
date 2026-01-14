@@ -122,15 +122,6 @@ export function AppSidebarAgents({ userRole }: { userRole?: string | null }) {
             )}
           </SidebarMenuItem>
 
-          {/* Agent Store - 一级标签 */}
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild className="font-semibold">
-              <Link href="/agent-store" data-testid="agent-store-link">
-                智能体商店
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
           {isLoading ? (
             <SidebarMenuItem>
               {Array.from({ length: 2 }).map(
