@@ -56,6 +56,10 @@ import { FileUIPart, TextUIPart } from "ai";
 import { toast } from "sonner";
 import { isFilePartSupported, isIngestSupported } from "@/lib/ai/file-support";
 import { useChatModels } from "@/hooks/queries/use-chat-models";
+import useSWR from "swr";
+import { fetcher } from "lib/utils";
+import { getIsUserAdmin } from "lib/user/utils";
+import { BasicUser } from "app-types/user";
 
 interface PromptInputProps {
   placeholder?: string;
@@ -100,6 +104,13 @@ export default function PromptInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadFiles } = useThreadFileUploader(threadId);
   const { data: providers } = useChatModels();
+
+  // 获取用户信息并判断角色
+  const { data: user } = useSWR<BasicUser>("/api/user/details", fetcher, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false,
+  });
+  const isAdmin = getIsUserAdmin(user);
 
   const [
     globalModel,
@@ -568,7 +579,7 @@ export default function PromptInput({
                     </Button>
                   ) : (
                     <>
-                      <ToolModeDropdown />
+                      {isAdmin && <ToolModeDropdown />}
                       <ToolSelectDropdown
                         className="mx-1"
                         align="start"
@@ -615,7 +626,7 @@ export default function PromptInput({
                     <ChevronDown className="size-3" />
                   </Button>
                 </SelectModel>
-                {!isLoading && !input.length && !voiceDisabled ? (
+                {isAdmin && !isLoading && !input.length && !voiceDisabled ? (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
