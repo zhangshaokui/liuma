@@ -11,6 +11,8 @@ import { cn } from "lib/utils";
 import { format } from "date-fns";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
+import { Badge } from "ui/badge";
 
 interface TemplateCardProps {
   template: any;
@@ -21,6 +23,7 @@ interface TemplateCardProps {
 export function TemplateCard({ template, userId, userRole }: TemplateCardProps) {
   const router = useRouter();
   const [isCopying, setIsCopying] = useState(false);
+  const t = useTranslations();
 
   const handleCopyClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -93,8 +96,16 @@ export function TemplateCard({ template, userId, userRole }: TemplateCardProps) 
       data-item-name={template.name}
       data-item-id={template.id}
     >
-      <CardHeader className="shrink gap-y-0">
-        <CardTitle className="flex gap-3 items-stretch min-w-0">
+      <CardHeader className="shrink gap-y-0 relative">
+        {template.copyCount > 0 && (
+          <Badge
+            variant="secondary"
+            className="absolute top-2 right-2 text-xs px-2 py-0.5"
+          >
+            {formatCopyCount(template.copyCount)} {t("AgentStore.copy")}
+          </Badge>
+        )}
+        <CardTitle className="flex gap-3 items-stretch min-w-0 pr-16">
           <div
             style={{ backgroundColor: template.icon?.style?.backgroundColor }}
             className="p-2 rounded-lg flex items-center justify-center ring ring-background border shrink-0"
@@ -111,11 +122,6 @@ export function TemplateCard({ template, userId, userRole }: TemplateCardProps) 
               <time className="shrink-0">
                 {format(template.updatedAt || new Date(), "MMM d, yyyy")}
               </time>
-              {template.copyCount > 0 && (
-                <span className="flex items-center gap-1">
-                  <span>{formatCopyCount(template.copyCount)} 复制</span>
-                </span>
-              )}
             </div>
           </div>
         </CardTitle>
@@ -152,7 +158,7 @@ export function TemplateCard({ template, userId, userRole }: TemplateCardProps) 
 
 function formatCopyCount(count: number | null | undefined): string {
   if (!count) return "0";
-  if (count >= 10000) return (count / 10000).toFixed(1) + "万";
-  if (count >= 1000) return (count / 1000).toFixed(1) + "k";
+  if (count >= 1000000) return (count / 1000000).toFixed(1) + "M";
+  if (count >= 1000) return (count / 1000).toFixed(1) + "K";
   return count.toString();
 }
