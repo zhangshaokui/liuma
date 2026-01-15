@@ -458,6 +458,9 @@
     "readOnlyDescription": "Others can view and use as a tool, but only you can edit.",
     "publicDescription": "Anyone can view, edit, and use this agent as a tool."
   },
+  "AgentStore": {
+    "copy": "copy"
+  },
   "KeyboardShortcuts": {
     "title": "Keyboard Shortcuts",
     "newChat": "New Chat",

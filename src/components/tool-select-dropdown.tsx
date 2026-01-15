@@ -81,6 +81,10 @@ import { redriectMcpOauth } from "lib/ai/mcp/oauth-redirect";
 import { GeminiIcon } from "ui/gemini-icon";
 import { useChatModels } from "@/hooks/queries/use-chat-models";
 import { OpenAIIcon } from "ui/openai-icon";
+import useSWR from "swr";
+import { fetcher } from "lib/utils";
+import { getIsUserAdmin } from "lib/user/utils";
+import { BasicUser } from "app-types/user";
 
 interface ToolSelectDropdownProps {
   align?: "start" | "end" | "center";
@@ -127,6 +131,13 @@ export function ToolSelectDropdown({
   const { isLoading } = useMcpList();
   const { data: providers } = useChatModels();
   const [globalModel] = appStore(useShallow((state) => [state.chatModel]));
+
+  // 获取用户信息并判断角色
+  const { data: user } = useSWR<BasicUser>("/api/user/details", fetcher, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false,
+  });
+  const isAdmin = getIsUserAdmin(user);
 
   const modelInfo = useMemo(() => {
     const provider = providers?.find(
@@ -250,7 +261,7 @@ export function ToolSelectDropdown({
         <div className="py-1">
           <DropdownMenuSeparator />
         </div>
-        <AgentSelector onSelectAgent={onSelectAgent} />
+        {isAdmin && <AgentSelector onSelectAgent={onSelectAgent} />}
         <div className="py-1">
           <DropdownMenuSeparator />
         </div>

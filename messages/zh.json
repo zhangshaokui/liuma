@@ -310,6 +310,9 @@
     "readOnlyDescription": "其他人可以查看并作为工具使用，但只有您可以编辑。",
     "publicDescription": "任何人都可以查看、编辑并将此智能体用作工具。"
   },
+  "AgentStore": {
+    "copy": "复制"
+  },
   "KeyboardShortcuts": {
     "title": "键盘快捷键",
     "newChat": "新聊天",

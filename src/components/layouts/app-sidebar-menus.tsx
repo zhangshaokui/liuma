@@ -50,23 +50,23 @@ export function AppSidebarMenus({ user }: { user?: BasicUser }) {
   return (
     <SidebarGroup>
       <SidebarGroupContent>
-        {/* New Chat - Only for Admin */}
-        {isAdmin && (
-          <SidebarMenu>
-            <Tooltip>
-              <SidebarMenuItem className="mb-1">
-                <Link
-                  href="/"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setOpenMobile(false);
-                    router.push(`/`);
-                    router.refresh();
-                  }}
-                >
-                  <SidebarMenuButton className="flex font-semibold group/new-chat bg-input/20 border border-border/40">
-                    <WriteIcon className="size-4" />
-                    {t("Layout.newChat")}
+        {/* New Chat - For All Users */}
+        <SidebarMenu>
+          <Tooltip>
+            <SidebarMenuItem className="mb-1">
+              <Link
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setOpenMobile(false);
+                  router.push(`/`);
+                  router.refresh();
+                }}
+              >
+                <SidebarMenuButton className="flex font-semibold group/new-chat bg-input/20 border border-border/40">
+                  <WriteIcon className="size-4" />
+                  {t("Layout.newChat")}
+                  {isAdmin && (
                     <div className="flex items-center gap-1 text-xs font-medium ml-auto opacity-0 group-hover/new-chat:opacity-100 transition-opacity">
                       {getShortcutKeyList(Shortcuts.openNewChat).map((key) => (
                         <span
@@ -77,12 +77,12 @@ export function AppSidebarMenus({ user }: { user?: BasicUser }) {
                         </span>
                       ))}
                     </div>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-            </Tooltip>
-          </SidebarMenu>
-        )}
+                  )}
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          </Tooltip>
+        </SidebarMenu>
 
         {/* MCP Configuration - Only for Admin */}
         {isAdmin && (
