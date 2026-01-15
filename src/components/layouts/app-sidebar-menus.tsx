@@ -186,20 +186,6 @@ export function AppSidebarMenus({ user }: { user?: BasicUser }) {
           </SidebarMenu>
         )}
 
-        {/* AI Employee - For All Users */}
-        <SidebarMenu>
-          <Tooltip>
-            <SidebarMenuItem>
-              <Link href="/ai-employee">
-                <SidebarMenuButton className="font-semibold">
-                  <BotIcon className="size-4" />
-                  AI员工
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          </Tooltip>
-        </SidebarMenu>
-
       </SidebarGroupContent>
       <ArchiveDialog
         open={addArchiveDialogOpen}
