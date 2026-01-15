@@ -19,8 +19,18 @@ export async function GET(request: Request) {
     const {
       type,
       filters: filtersParam,
+      group,
       limit,
     } = AgentQuerySchema.parse(queryParams);
+
+    // If group parameter is provided, fetch agents by group
+    if (group) {
+      const agents = await agentRepository.selectAgentsByGroup(
+        session.user.id,
+        group,
+      );
+      return Response.json(agents.slice(0, limit));
+    }
 
     // Parse filters - can be passed as comma-separated string or single type
     let filters;

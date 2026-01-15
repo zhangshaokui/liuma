@@ -74,7 +74,6 @@ export default function WorkflowListPage({
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const currentUserId = session?.user?.id;
-  const [isVisibilityChangeLoading, setIsVisibilityChangeLoading] =
     useState(false);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
@@ -100,30 +99,6 @@ export default function WorkflowListPage({
     const workflowId = await createWithExample(exampleWorkflow);
     mutate("/api/workflow");
     router.push(`/workflow/${workflowId}`);
-  };
-
-  const updateVisibility = async (
-    workflowId: string,
-    visibility: "private" | "public" | "readonly",
-  ) => {
-    try {
-      setIsVisibilityChangeLoading(true);
-      const response = await fetch(`/api/workflow/${workflowId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ visibility }),
-      });
-
-      if (!response.ok) throw new Error("Failed to update visibility");
-
-      // Refresh the workflows data
-      mutate("/api/workflow");
-      toast.success(t("Workflow.visibilityUpdated"));
-    } catch {
-      toast.error(t("Common.error"));
-    } finally {
-      setIsVisibilityChangeLoading(false);
-    }
   };
 
   const deleteWorkflow = async (workflowId: string) => {
@@ -251,17 +226,11 @@ export default function WorkflowListPage({
                     type="workflow"
                     item={workflow}
                     href={`/workflow/${workflow.id}`}
-                    onVisibilityChange={
-                      canCreate && workflow.userId === currentUserId
-                        ? updateVisibility
-                        : undefined
-                    }
                     onDelete={
                       canCreate && workflow.userId === currentUserId
                         ? deleteWorkflow
                         : undefined
                     }
-                    isVisibilityChangeLoading={isVisibilityChangeLoading}
                     isDeleteLoading={isDeleteLoading}
                     isOwner={workflow.userId === currentUserId}
                   />

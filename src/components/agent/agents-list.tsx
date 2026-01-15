@@ -7,7 +7,6 @@ import { Button } from "ui/button";
 import { Plus, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { BackgroundPaths } from "ui/background-paths";
-import { useBookmark } from "@/hooks/queries/use-bookmark";
 import { useMutateAgents } from "@/hooks/queries/use-agents";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -19,10 +18,12 @@ import { useState } from "react";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { safe } from "ts-safe";
 import { canCreateAgent } from "lib/auth/client-permissions";
+import { AddToStoreDialog } from "@/components/agent/add-to-store-dialog";
+import { useEmployeeActions } from "@/hooks/queries/use-employee-actions";
 
 interface AgentsListProps {
   initialMyAgents: AgentSummary[];
-  initialSharedAgents: AgentSummary[];
+  initialSharedAgents?: AgentSummary[];
   userId: string;
   userRole?: string | null;
 }
@@ -35,37 +36,28 @@ export function AgentsList({
 }: AgentsListProps) {
   const t = useTranslations();
   const mutateAgents = useMutateAgents();
+  const { toggleEmployee, isLoading: isEmployeeLoading } = useEmployeeActions();
   const [deletingAgentLoading, setDeletingAgentLoading] = useState<
     string | null
   >(null);
+  const [isAddToStoreDialogOpen, setIsAddToStoreDialogOpen] = useState(false);
+  const [selectedAgentForStore, setSelectedAgentForStore] = useState<{id: string, name: string} | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [visibilityChangeLoading, setVisibilityChangeLoading] = useState<
     string | null
   >(null);
 
   const { data: allAgents } = useSWR(
-    "/api/agent?filters=mine,shared",
+    `/api/agent?filters=mine,shared&key=${refreshKey}`,
     fetcher,
     {
-      fallbackData: [...initialMyAgents, ...initialSharedAgents],
+      fallbackData: [...initialMyAgents, ...(initialSharedAgents || [])],
     },
   );
 
   const myAgents =
     allAgents?.filter((agent: AgentSummary) => agent.userId === userId) ||
     initialMyAgents;
-
-  const sharedAgents =
-    allAgents?.filter((agent: AgentSummary) => agent.userId !== userId) ||
-    initialSharedAgents;
-
-  const { toggleBookmark: toggleBookmarkHook, isLoading: isBookmarkLoading } =
-    useBookmark({
-      itemType: "agent",
-    });
-
-  const toggleBookmark = async (agentId: string, isBookmarked: boolean) => {
-    await toggleBookmarkHook({ id: agentId, isBookmarked });
-  };
 
   const updateVisibility = async (agentId: string, visibility: Visibility) => {
     safe(() => setVisibilityChangeLoading(agentId))
@@ -86,6 +78,15 @@ export function AgentsList({
         toast.error(t("Common.error"));
       })
       .watch(() => setVisibilityChangeLoading(null));
+  };
+
+  const toggleEmployeeAction = async (agentId: string, isEmployee: boolean) => {
+    try {
+      await toggleEmployee({ id: agentId, isEmployee });
+      toast.success(isEmployee ? "已移出员工列表" : "已添加为员工");
+    } catch (err) {
+      handleErrorWithToast(err instanceof Error ? err : new Error(String(err)));
+    }
   };
 
   const deleteAgent = async (agentId: string) => {
@@ -112,6 +113,7 @@ export function AgentsList({
 
   // Check if user can create agents using Better Auth permissions
   const canCreate = canCreateAgent(userRole);
+  const isAdmin = userRole === 'admin';
 
   return (
     <div className="w-full flex flex-col gap-4 p-8">
@@ -177,51 +179,37 @@ export function AgentsList({
                 isVisibilityChangeLoading={visibilityChangeLoading === agent.id}
                 isDeleteLoading={deletingAgentLoading === agent.id}
                 onDelete={deleteAgent}
+                hideVisibilityAndBookmark={true}
+                isEmployee={(agent as any).isEmployee || false}
+                onEmployeeToggle={toggleEmployeeAction}
+                isEmployeeToggleLoading={isEmployeeLoading(agent.id)}
+                onAddToStore={
+                  isAdmin
+                    ? () => {
+                        setSelectedAgentForStore({ id: agent.id, name: agent.name });
+                        setIsAddToStoreDialogOpen(true);
+                      }
+                    : undefined
+                }
               />
             ))}
           </div>
         </div>
       )}
 
-      {/* Shared/Available Agents Section */}
-      <div className="flex flex-col gap-4 mt-8">
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">
-            {canCreate ? t("Agent.sharedAgents") : t("Agent.availableAgents")}
-          </h2>
-          <div className="flex-1 h-px bg-border" />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {sharedAgents.map((agent) => (
-            <ShareableCard
-              key={agent.id}
-              type="agent"
-              item={agent}
-              isOwner={false}
-              href={`/agent/${agent.id}`}
-              onBookmarkToggle={toggleBookmark}
-              isBookmarkToggleLoading={isBookmarkLoading(agent.id)}
-            />
-          ))}
-          {sharedAgents.length === 0 && (
-            <Card className="col-span-full bg-transparent border-none">
-              <CardHeader className="text-center py-12">
-                <CardTitle>
-                  {canCreate
-                    ? t("Agent.noSharedAgents")
-                    : t("Agent.noAvailableAgents")}
-                </CardTitle>
-                <CardDescription>
-                  {canCreate
-                    ? t("Agent.noSharedAgentsDescription")
-                    : t("Agent.noAvailableAgentsDescription")}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          )}
-        </div>
-      </div>
+      {isAddToStoreDialogOpen && selectedAgentForStore && (
+        <AddToStoreDialog
+          agentId={selectedAgentForStore!.id}
+          agentName={selectedAgentForStore!.name}
+          open={isAddToStoreDialogOpen}
+          onOpenChange={setIsAddToStoreDialogOpen}
+          onAdded={() => {
+            setIsAddToStoreDialogOpen(false);
+            setSelectedAgentForStore(null);
+            setRefreshKey(prev => prev + 1);
+          }}
+        />
+      )}
     </div>
   );
 }

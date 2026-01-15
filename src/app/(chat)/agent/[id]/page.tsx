@@ -1,7 +1,7 @@
-import EditAgent from "@/components/agent/edit-agent";
-import { agentRepository } from "lib/db/repository";
-import { getSession } from "auth/server";
-import { notFound, redirect } from "next/navigation";
+import EditAgent from '@/components/agent/edit-agent';
+import { agentRepository } from 'lib/db/repository';
+import { getSession } from 'auth/server';
+import { notFound, redirect } from 'next/navigation';
 
 export default async function AgentPage({
   params,
@@ -12,12 +12,12 @@ export default async function AgentPage({
   const session = await getSession();
 
   if (!session?.user.id) {
-    redirect("/sign-in");
+    redirect('/sign-in');
   }
 
   // For new agents, pass no initial data
-  if (id === "new") {
-    return <EditAgent userId={session.user.id} />;
+  if (id === 'new') {
+    return <EditAgent userId={session.user.id} userRole={session.user.role} />;
   }
 
   // Fetch the agent data on the server
@@ -28,16 +28,16 @@ export default async function AgentPage({
   }
 
   const isOwner = agent.userId === session.user.id;
-  const hasEditAccess = isOwner || agent.visibility === "public";
+  const hasEditAccess = isOwner || agent.visibility === 'public';
 
   return (
     <EditAgent
       key={id}
       initialAgent={agent}
       userId={session.user.id}
+      userRole={session.user.role}
       isOwner={isOwner}
       hasEditAccess={hasEditAccess}
-      isBookmarked={agent.isBookmarked || false}
     />
   );
 }

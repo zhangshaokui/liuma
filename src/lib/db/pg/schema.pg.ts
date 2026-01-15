@@ -11,6 +11,7 @@ import {
   boolean,
   unique,
   varchar,
+  integer,
   index,
 } from "drizzle-orm/pg-core";
 import { isNotNull } from "drizzle-orm";
@@ -41,7 +42,7 @@ export const ChatMessageTable = pgTable("chat_message", {
 
 export const AgentTable = pgTable("agent", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   description: text("description"),
   icon: json("icon").$type<Agent["icon"]>(),
   userId: uuid("user_id")
@@ -55,7 +56,21 @@ export const AgentTable = pgTable("agent", {
     .default("private"),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  isTemplate: boolean("is_template").notNull().default(false),
+  categoryId: uuid("category_id").references(() => AgentCategoryTable.id, { onDelete: "set null" }),
+  copyCount: integer("copy_count").notNull().default(0),
+  coverEmoji: text("cover_emoji"),
 });
+
+export const AgentCategoryTable = pgTable("agent_category", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  name: text("name").notNull().unique(),
+  emoji: text("emoji").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+
 
 export const BookmarkTable = pgTable(
   "bookmark",
@@ -81,7 +96,7 @@ export const BookmarkTable = pgTable(
 
 export const McpServerTable = pgTable("mcp_server", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   config: json("config").notNull().$type<MCPServerConfig>(),
   enabled: boolean("enabled").notNull().default(true),
   userId: uuid("user_id")
@@ -98,7 +113,7 @@ export const McpServerTable = pgTable("mcp_server", {
 
 export const UserTable = pgTable("user", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   password: text("password"),
@@ -208,7 +223,7 @@ export const McpServerCustomizationTable = pgTable(
 export const WorkflowTable = pgTable("workflow", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   version: text("version").notNull().default("0.1.0"),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   icon: json("icon").$type<DBWorkflow["icon"]>(),
   description: text("description"),
   isPublished: boolean("is_published").notNull().default(false),
@@ -233,7 +248,7 @@ export const WorkflowNodeDataTable = pgTable(
       .notNull()
       .references(() => WorkflowTable.id, { onDelete: "cascade" }),
     kind: text("kind").notNull(),
-    name: text("name").notNull(),
+    name: text("name").notNull().unique(),
     description: text("description"),
     uiConfig: json("ui_config").$type<DBNode["uiConfig"]>().default({}),
     nodeConfig: json("node_config")
@@ -267,7 +282,7 @@ export const WorkflowEdgeTable = pgTable("workflow_edge", {
 
 export const ArchiveTable = pgTable("archive", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   description: text("description"),
   userId: uuid("user_id")
     .notNull()
@@ -374,3 +389,79 @@ export const ChatExportCommentTable = pgTable("chat_export_comment", {
 export type ArchiveEntity = typeof ArchiveTable.$inferSelect;
 export type ArchiveItemEntity = typeof ArchiveItemTable.$inferSelect;
 export type BookmarkEntity = typeof BookmarkTable.$inferSelect;
+
+// User Employees table - stores AI agents hired by users
+export const UserEmployeeTable = pgTable(
+  "user_employees",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    agentId: uuid("agent_id")
+      .notNull()
+      .references(() => AgentTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    unique().on(table.userId, table.agentId),
+    index("user_employees_user_id_idx").on(table.userId),
+    index("user_employees_agent_id_idx").on(table.agentId),
+  ],
+);
+
+export type UserEmployeeEntity = typeof UserEmployeeTable.$inferSelect;
+
+// Agent Groups - 用户私有组（如我的AI员工、常用智能体）
+export const AgentGroupTable = pgTable(
+  "agent_group",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    name: text("name").notNull().unique(),
+    type: varchar("type", { enum: ["system", "custom"] })
+      .notNull()
+      .default("custom"),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    unique().on(table.userId, table.name),
+    index("agent_group_user_id_idx").on(table.userId),
+    index("agent_group_type_idx").on(table.type),
+  ],
+);
+
+// Agent Group Members - agent与组的多对多关系
+export const AgentGroupMemberTable = pgTable(
+  "agent_group_member",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    agentId: uuid("agent_id")
+      .notNull()
+      .references(() => AgentTable.id, { onDelete: "cascade" }),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => AgentGroupTable.id, { onDelete: "cascade" }),
+    lastUsedAt: timestamp("last_used_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    unique().on(table.agentId, table.groupId),
+    index("agent_group_member_agent_id_idx").on(table.agentId),
+    index("agent_group_member_group_id_idx").on(table.groupId),
+    index("agent_group_member_last_used_idx").on(table.lastUsedAt),
+  ],
+);
+
+export type AgentGroupEntity = typeof AgentGroupTable.$inferSelect;
+export type AgentGroupMemberEntity = typeof AgentGroupMemberTable.$inferSelect;

@@ -1,6 +1,8 @@
 import { Agent, AgentRepository, AgentSummary } from "app-types/agent";
+import { pgAgentGroupRepository } from "./agent-group-repository.pg";
 import { pgDb as db } from "../db.pg";
-import { AgentTable, BookmarkTable, UserTable } from "../schema.pg";
+import { AgentTable, BookmarkTable, UserTable, UserEmployeeTable } from "../schema.pg";
+import { AgentGroupMemberTable } from "../schema.pg";
 import { and, desc, eq, ne, or, sql } from "drizzle-orm";
 import { generateUUID } from "lib/utils";
 
@@ -16,6 +18,9 @@ export const pgAgentRepository: AgentRepository = {
         userId: agent.userId,
         instructions: agent.instructions,
         visibility: agent.visibility || "private",
+        // Agent Store template fields
+        isTemplate: agent.isTemplate ?? false,
+        categoryId: agent.categoryId ?? null,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -206,6 +211,7 @@ export const pgAgentRepository: AgentRepository = {
         userName: UserTable.name,
         userAvatar: UserTable.image,
         isBookmarked: sql<boolean>`CASE WHEN ${BookmarkTable.id} IS NOT NULL THEN true ELSE false END`,
+        isEmployee: sql<boolean>`CASE WHEN ${UserEmployeeTable.id} IS NOT NULL THEN true ELSE false END`,
       })
       .from(AgentTable)
       .innerJoin(UserTable, eq(AgentTable.userId, UserTable.id))
@@ -215,6 +221,13 @@ export const pgAgentRepository: AgentRepository = {
           eq(BookmarkTable.itemId, AgentTable.id),
           eq(BookmarkTable.itemType, "agent"),
           eq(BookmarkTable.userId, currentUserId),
+        ),
+      )
+      .leftJoin(
+        UserEmployeeTable,
+        and(
+          eq(UserEmployeeTable.agentId, AgentTable.id),
+          eq(UserEmployeeTable.userId, currentUserId),
         ),
       )
       .where(orConditions.length > 1 ? or(...orConditions) : orConditions[0])
@@ -249,5 +262,77 @@ export const pgAgentRepository: AgentRepository = {
     if (userId == agent.userId) return true;
     if (agent.visibility === "public" && !destructive) return true;
     return false;
+  },
+
+  async selectAgentsByGroup(
+    currentUserId: string,
+    groupName: string,
+  ): Promise<AgentSummary[]> {
+    const group = await pgAgentGroupRepository.getGroupByName(currentUserId, groupName);
+    if (!group) {
+      return [];
+    }
+
+    const results = await db
+      .select({
+        id: AgentTable.id,
+        name: AgentTable.name,
+        description: AgentTable.description,
+        icon: AgentTable.icon,
+        userId: AgentTable.userId,
+        visibility: AgentTable.visibility,
+        createdAt: AgentTable.createdAt,
+        updatedAt: AgentTable.updatedAt,
+        userName: UserTable.name,
+        userAvatar: UserTable.image,
+        lastUsedAt: AgentGroupMemberTable.lastUsedAt,
+        isBookmarked: sql<boolean>`CASE WHEN ${BookmarkTable.id} IS NOT NULL THEN true ELSE false END`,
+      })
+      .from(AgentGroupMemberTable)
+      .innerJoin(AgentTable, eq(AgentGroupMemberTable.agentId, AgentTable.id))
+      .innerJoin(UserTable, eq(AgentTable.userId, UserTable.id))
+      .leftJoin(
+        BookmarkTable,
+        and(
+          eq(BookmarkTable.itemId, AgentTable.id),
+          eq(BookmarkTable.itemType, "agent"),
+          eq(BookmarkTable.userId, currentUserId),
+        ),
+      )
+      .where(eq(AgentGroupMemberTable.groupId, group.id))
+      .orderBy(desc(AgentGroupMemberTable.lastUsedAt));
+
+    // Map database nulls to undefined
+    return results.map((result: any) => ({
+      ...result,
+      description: result.description ?? undefined,
+      icon: result.icon ?? undefined,
+      userName: result.userName ?? undefined,
+      userAvatar: result.userAvatar ?? undefined,
+    }));
+  },
+
+  async getAgentById(agentId: string) {
+    const [agent] = await db
+      .select()
+      .from(AgentTable)
+      .where(eq(AgentTable.id, agentId))
+      .limit(1);
+
+    if (!agent) return null;
+
+    return {
+      ...agent,
+      description: agent.description ?? undefined,
+      icon: agent.icon ?? undefined,
+      instructions: agent.instructions ?? {},
+    };
+  },
+
+  async incrementCopyCount(agentId: string) {
+    await db
+      .update(AgentTable)
+      .set({ copyCount: sql`copy_count + 1` })
+      .where(eq(AgentTable.id, agentId));
   },
 };
