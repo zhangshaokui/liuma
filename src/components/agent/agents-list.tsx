@@ -123,11 +123,6 @@ export function AgentsList({
       {/* My Agents Section */}
       {canCreate && (
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold">{t("Agent.myAgents")}</h2>
-            <div className="flex-1 h-px bg-border" />
-          </div>
-
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {canCreate && (
               <Link href="/agent/new">

@@ -285,7 +285,7 @@ export function AppSidebarAgents({ userRole }: { userRole?: string | null }) {
         <SidebarMenuItem>
           <SidebarMenuButton asChild className="font-semibold">
             <Link href="/agent-store" data-testid="agent-store-link">
-              智能体商店
+              {t("Layout.agentStore")}
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
