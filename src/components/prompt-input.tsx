@@ -580,15 +580,17 @@ export default function PromptInput({
                   ) : (
                     <>
                       {isAdmin && <ToolModeDropdown />}
-                      <ToolSelectDropdown
-                        className="mx-1"
-                        align="start"
-                        side="top"
-                        onSelectWorkflow={onSelectWorkflow}
-                        onSelectAgent={onSelectAgent}
-                        onGenerateImage={handleGenerateImage}
-                        mentions={mentions}
-                      />
+                      {isAdmin && (
+                        <ToolSelectDropdown
+                          className="mx-1"
+                          align="start"
+                          side="top"
+                          onSelectWorkflow={onSelectWorkflow}
+                          onSelectAgent={onSelectAgent}
+                          onGenerateImage={handleGenerateImage}
+                          mentions={mentions}
+                        />
+                      )}
                     </>
                   ))}
 
