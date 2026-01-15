@@ -21,6 +21,10 @@ import { useTranslations } from "next-intl";
 import { TextShimmer } from "ui/text-shimmer";
 import { buildReturnUrl } from "lib/admin/navigation-utils";
 import { BackButton } from "@/components/layouts/back-button";
+import { getIsUserAdmin } from "lib/user/utils";
+import { BasicUser } from "app-types/user";
+import useSWR from "swr";
+import { fetcher } from "lib/utils";
 
 export function AppHeader() {
   const t = useTranslations();
@@ -29,12 +33,20 @@ export function AppHeader() {
   const currentPaths = usePathname();
   const searchParams = useSearchParams();
 
+  // 获取用户信息并判断角色
+  const { data: user } = useSWR<BasicUser>("/api/user/details", fetcher, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false,
+  });
+  const isAdmin = getIsUserAdmin(user);
+
   const showActionButtons = useMemo(() => {
     if (currentPaths.startsWith("/admin")) {
       return false;
     }
-    return true;
-  }, [currentPaths]);
+    // 只对 admin 显示右上角按钮
+    return isAdmin;
+  }, [currentPaths, isAdmin]);
 
   const componentByPage = useMemo(() => {
     if (currentPaths.startsWith("/chat/")) {

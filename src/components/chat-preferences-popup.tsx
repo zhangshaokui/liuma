@@ -22,6 +22,10 @@ import { UserIcon, X, Share2 } from "lucide-react";
 import { Button } from "ui/button";
 import { useTranslations } from "next-intl";
 import { MCPIcon } from "ui/mcp-icon";
+import useSWR from "swr";
+import { fetcher } from "lib/utils";
+import { getIsUserAdmin } from "lib/user/utils";
+import { BasicUser } from "app-types/user";
 
 export function ChatPreferencesPopup() {
   const [openChatPreferences, appStoreMutate] = appStore(
@@ -30,22 +34,37 @@ export function ChatPreferencesPopup() {
 
   const t = useTranslations();
 
+  // 获取用户信息并判断角色
+  const { data: user } = useSWR<BasicUser>("/api/user/details", fetcher, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false,
+  });
+  const isAdmin = getIsUserAdmin(user);
+
   const tabs = useMemo(() => {
-    return [
+    const baseTabs = [
       {
         label: t("Chat.ChatPreferences.userInstructions"),
         icon: <UserIcon className="w-4 h-4" />,
       },
-      {
-        label: t("Chat.ChatPreferences.mcpInstructions"),
-        icon: <MCPIcon className="w-4 h-4 fill-muted-foreground" />,
-      },
-      {
-        label: t("Chat.ChatPreferences.myExports"),
-        icon: <Share2 className="w-4 h-4" />,
-      },
     ];
-  }, [t]);
+
+    // 只对 admin 显示 MCP 说明和 My Exports
+    if (isAdmin) {
+      baseTabs.push(
+        {
+          label: t("Chat.ChatPreferences.mcpInstructions"),
+          icon: <MCPIcon className="w-4 h-4 fill-muted-foreground" />,
+        },
+        {
+          label: t("Chat.ChatPreferences.myExports"),
+          icon: <Share2 className="w-4 h-4" />,
+        }
+      );
+    }
+
+    return baseTabs;
+  }, [t, isAdmin]);
 
   const [tab, setTab] = useState(0);
 
@@ -153,9 +172,9 @@ export function ChatPreferencesPopup() {
                       <>
                         {tab == 0 ? (
                           <UserInstructionsContent />
-                        ) : tab == 1 ? (
+                        ) : isAdmin && tab == 1 ? (
                           <MCPInstructionsContent />
-                        ) : tab == 2 ? (
+                        ) : isAdmin && tab == 2 ? (
                           <ExportsManagementContent />
                         ) : null}
                       </>
