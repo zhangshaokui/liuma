@@ -23,7 +23,6 @@ import {
   FolderSearchIcon,
   PlusIcon,
   Waypoints,
-  BotIcon,
 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { Skeleton } from "ui/skeleton";
