@@ -1,0 +1,30 @@
+name: Auto Deploy to TX Server
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  deploy:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Deploy to TX Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.TX_HOST }}
+          username: ${{ secrets.TX_USER }}
+          key: ${{ secrets.TX_SSH_KEY }}
+          script: |
+            cd ~/better/liuma
+            git pull origin dev
+            rsync -av --exclude='.git' --exclude='node_modules' --exclude='.next' --exclude='.env' \
+              ~/better/liuma/ ~/bc/better-chatbot/
+            cd ~/bc/better-chatbot
+            pnpm run build
+            pm2 restart better-chatbot
