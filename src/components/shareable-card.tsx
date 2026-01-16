@@ -78,11 +78,12 @@ export function ShareableCard({
     type === "mcp" ? undefined : (item as AgentSummary).isBookmarked;
 
   // Format date based on locale
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | string) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
     if (locale === "zh") {
-      return format(date, "yyyy.MM.dd");
+      return format(dateObj, "yyyy.MM.dd");
     } else {
-      return format(date, "MMM d, yyyy");
+      return format(dateObj, "MMM d, yyyy");
     }
   };
 
