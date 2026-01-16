@@ -180,7 +180,7 @@ export function ChatMentionInputSuggestion({
       return disabledType;
     }
     // Non-admin users can only see agents
-    return ["mcp", "workflow", "defaultTool"] as const;
+    return ["mcp", "workflow", "defaultTool"] as ("mcp" | "workflow" | "defaultTool" | "agent")[];
   }, [isAdmin, disabledType]);
 
   const [searchValue, setSearchValue] = useState("");
