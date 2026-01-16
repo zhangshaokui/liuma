@@ -9,6 +9,7 @@ import { appStore } from "@/app/store";
 import { ChatMention } from "app-types/chat";
 import { cn } from "lib/utils";
 import { format } from "date-fns";
+import { generateUUID } from "lib/utils";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
@@ -57,35 +58,14 @@ export function TemplateCard({ template, userId, userRole }: TemplateCardProps) 
       description: template.description,
     };
 
-    const currentThreadId = appStore.getState().currentThreadId;
-
-    if (currentThreadId) {
-      appStore.setState((prev) => {
-        const currentMentions = prev.threadMentions[currentThreadId] || [];
-        const target = currentMentions.find(
-          (mention) => mention.type == "agent" && mention.agentId === template.id,
-        );
-
-        if (target) {
-          return prev;
-        }
-
-        return {
-          threadMentions: {
-            ...prev.threadMentions,
-            [currentThreadId]: [
-              ...currentMentions.filter((v) => v.type != "agent"),
-              newMention,
-            ],
-          },
-        };
-      });
-    } else {
-      router.push("/");
-      appStore.setState(() => ({
-        pendingThreadMention: newMention,
-      }));
-    }
+    // Always create a new thread and navigate to it
+    const newThreadId = generateUUID();
+    appStore.setState(() => ({
+      threadMentions: {
+        [newThreadId]: [newMention],
+      },
+    }));
+    router.push(`/chat/${newThreadId}`);
   };
 
   return (
