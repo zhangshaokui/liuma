@@ -37,7 +37,7 @@ import { getLocaleAction } from "@/i18n/get-locale";
 import { Suspense, useCallback } from "react";
 import { useThemeStyle } from "@/hooks/use-theme-style";
 import { BasicUser } from "app-types/user";
-import { getUserAvatar, getIsUserAdmin } from "lib/user/utils";
+import { getUserAvatar } from "lib/user/utils";
 import { Skeleton } from "ui/skeleton";
 
 export function AppSidebarUserInner(props: {
@@ -53,7 +53,6 @@ export function AppSidebarUserInner(props: {
   });
   const appStoreMutate = appStore((state) => state.mutate);
   const t = useTranslations("Layout");
-  const isAdmin = getIsUserAdmin(user);
 
   const logout = () => {
     authClient.signOut().finally(() => {
