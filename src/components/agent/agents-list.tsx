@@ -79,12 +79,10 @@ export function AgentsList({
   };
 
   const deleteAgent = async (agentId: string) => {
-    console.log("deleteAgent called for:", agentId);
     const ok = await notify.confirm({
       title: t("Common.delete"),
       description: t("Agent.deleteConfirm"),
     });
-    console.log("Confirm result:", ok);
     if (!ok) return;
     safe(() => setDeletingAgentLoading(agentId))
       .map(() =>

@@ -4,15 +4,6 @@ import { generateUUID } from "lib/utils";
 import { ReactNode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Button } from "ui/button";
-import { useTranslations } from "next-intl";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "ui/dialog";
 import { Textarea } from "ui/textarea";
 
 type Alert = {
@@ -27,6 +18,100 @@ const createContainer = () => {
   return container;
 };
 
+// Custom Confirm Dialog Component
+function CustomConfirmDialog({
+  title,
+  description,
+  onConfirm,
+  onCancel,
+  okText = "确定",
+  cancelText = "取消",
+}: {
+  title?: ReactNode;
+  description: ReactNode;
+  onConfirm: () => void;
+  onCancel: () => void;
+  okText?: string;
+  cancelText?: string;
+}) {
+  const handleBackdropClick = () => {
+    onCancel();
+  };
+
+  const handleContentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 9999,
+        padding: "16px",
+      }}
+      onClick={handleBackdropClick}
+    >
+      <div
+        style={{
+          backgroundColor: "hsl(var(--background))",
+          border: "1px solid hsl(var(--border))",
+          borderRadius: "8px",
+          padding: "24px",
+          maxWidth: "448px",
+          width: "100%",
+          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+        }}
+        onClick={handleContentClick}
+      >
+        <div style={{ marginBottom: "16px" }}>
+          <h2
+            style={{
+              fontSize: "18px",
+              fontWeight: 600,
+              marginBottom: "8px",
+              color: "hsl(var(--foreground))",
+            }}
+          >
+            {title}
+          </h2>
+          <p
+            style={{
+              fontSize: "14px",
+              color: "hsl(var(--muted-foreground))",
+              lineHeight: "1.5",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {description}
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+          <Button
+            variant="ghost"
+            onClick={onCancel}
+          >
+            {cancelText}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={onConfirm}
+          >
+            {okText}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const notify = {
   component({
     children,
@@ -40,17 +125,7 @@ export const notify = {
         container.remove();
         resolve();
       };
-      root.render(
-        <Dialog open onOpenChange={close}>
-          <DialogContent className={className}>
-            <DialogHeader className="hidden">
-              <DialogTitle></DialogTitle>
-              <DialogDescription></DialogDescription>
-            </DialogHeader>
-            {children}
-          </DialogContent>
-        </Dialog>,
-      );
+      root.render(<div onClick={close}>{children}</div>);
     });
   },
   alert(alert: Alert) {
@@ -62,69 +137,49 @@ export const notify = {
         container.remove();
         resolve();
       };
+
+      const handleConfirm = () => {
+        close();
+      };
+
       root.render(
-        <Dialog open onOpenChange={(open) => !open && close()}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{alert.title}</DialogTitle>
-              <DialogDescription>{alert.description}</DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant={"ghost"} onClick={close}>
-                Confirm
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>,
+        <CustomConfirmDialog
+          title={alert.title}
+          description={alert.description}
+          onConfirm={handleConfirm}
+          onCancel={handleConfirm}
+          okText="确定"
+        />
       );
     });
   },
   confirm: (confirm: Alert & { okText?: string; cancelText?: string }) => {
-    console.log("notify.confirm called with:", confirm);
     return new Promise<boolean>((resolve) => {
       const container = createContainer();
       const root = createRoot(container);
-      const close = () => {
+
+      const handleConfirm = () => {
+        resolve(true);
         root.unmount();
         container.remove();
       };
-      const ok = () => {
-        console.log("Confirm OK clicked");
-        resolve(true);
-        close();
-      };
-      const cancel = () => {
-        console.log("Confirm cancelled");
+
+      const handleCancel = () => {
         resolve(false);
-        close();
+        root.unmount();
+        container.remove();
       };
 
-      function Component() {
-        const t = useTranslations();
-        console.log("Confirm Component rendering");
-        return (
-          <Dialog open onOpenChange={(open) => !open && cancel()}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{confirm.title}</DialogTitle>
-                <DialogDescription className="whitespace-pre-wrap">
-                  {confirm.description}
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button variant={"ghost"} onClick={cancel}>
-                  {confirm.cancelText || t("Common.cancel")}
-                </Button>
-                <Button variant={"secondary"} onClick={ok}>
-                  {confirm.okText || t("Common.confirm")}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        );
-      }
-
-      root.render(<Component />);
+      root.render(
+        <CustomConfirmDialog
+          title={confirm.title}
+          description={confirm.description}
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+          okText={confirm.okText}
+          cancelText={confirm.cancelText}
+        />
+      );
     });
   },
   prompt: (prompt: Alert) => {
@@ -137,36 +192,85 @@ export const notify = {
         container.remove();
         resolve(text);
       };
+
       const Component = () => {
         const [text, setText] = useState("");
+        const handleBackdropClick = () => close();
+        const handleContentClick = (e: React.MouseEvent) => e.stopPropagation();
+
         return (
-          <Dialog open onOpenChange={(open) => !open && close()}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{prompt.title}</DialogTitle>
-                <DialogDescription asChild>
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 9999,
+              padding: "16px",
+            }}
+            onClick={handleBackdropClick}
+          >
+            <div
+              style={{
+                backgroundColor: "hsl(var(--background))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "8px",
+                padding: "24px",
+                maxWidth: "448px",
+                width: "100%",
+                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+              }}
+              onClick={handleContentClick}
+            >
+              <div style={{ marginBottom: "16px" }}>
+                <h2
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: 600,
+                    marginBottom: "8px",
+                    color: "hsl(var(--foreground))",
+                  }}
+                >
+                  {prompt.title}
+                </h2>
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color: "hsl(var(--muted-foreground))",
+                  }}
+                >
                   {prompt.description}
-                </DialogDescription>
+                </div>
                 <Textarea
                   className="resize-none"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
+                  style={{ marginTop: "16px" }}
                 />
-              </DialogHeader>
-              <DialogFooter>
-                <Button variant={"ghost"} onClick={() => close()}>
-                  Cancel
+              </div>
+              <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                <Button
+                  variant="ghost"
+                  onClick={() => close()}
+                  disabled={!text.trim()}
+                >
+                  取消
                 </Button>
                 <Button
+                  variant="secondary"
                   disabled={!text.trim()}
-                  variant={"secondary"}
                   onClick={() => close(text)}
                 >
-                  Confirm
+                  确定
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              </div>
+            </div>
+          </div>
         );
       };
 

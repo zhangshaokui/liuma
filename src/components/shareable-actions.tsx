@@ -300,28 +300,23 @@ export function ShareableActions({
       {isOwner && renderActions && renderActions()}
 
       {isOwner && onDelete && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 text-muted-foreground hover:text-destructive"
-              disabled={isAnyLoading || disabled}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onDelete();
-              }}
-            >
-              {isDeleteLoading ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Trash2 className="size-4" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{t("Common.delete")}</TooltipContent>
-        </Tooltip>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 text-muted-foreground hover:text-destructive"
+          disabled={isAnyLoading || disabled}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete();
+          }}
+        >
+          {isDeleteLoading ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Trash2 className="size-4" />
+          )}
+        </Button>
       )}
 
       {isOwner && onAddToStore && (
