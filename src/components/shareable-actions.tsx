@@ -8,6 +8,9 @@ import {
   BookmarkCheck,
   Trash2,
   Loader2,
+  UserPlus,
+  UserMinus,
+  Store,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -81,8 +84,13 @@ interface ShareableActionsProps {
   isBookmarkToggleLoading?: boolean;
   onDelete?: () => void;
   isDeleteLoading?: boolean;
+  isEmployee?: boolean;
+  onEmployeeToggle?: (isEmployee: boolean) => void;
+  isEmployeeToggleLoading?: boolean;
   renderActions?: () => React.ReactNode;
   disabled?: boolean;
+  hideVisibilityAndBookmark?: boolean;
+  onAddToStore?: () => void;
 }
 
 export function ShareableActions({
@@ -99,15 +107,28 @@ export function ShareableActions({
   isVisibilityChangeLoading = false,
   isBookmarkToggleLoading = false,
   isDeleteLoading = false,
+  isEmployee = false,
+  onEmployeeToggle,
+  isEmployeeToggleLoading = false,
   disabled = false,
+  hideVisibilityAndBookmark = false,
+  onAddToStore,
 }: ShareableActionsProps) {
   const t = useTranslations();
   const router = useRouter();
 
   const isAnyLoading = useMemo(
     () =>
-      isVisibilityChangeLoading || isBookmarkToggleLoading || isDeleteLoading,
-    [isVisibilityChangeLoading, isBookmarkToggleLoading, isDeleteLoading],
+      isVisibilityChangeLoading ||
+      isBookmarkToggleLoading ||
+      isDeleteLoading ||
+      isEmployeeToggleLoading,
+    [
+      isVisibilityChangeLoading,
+      isBookmarkToggleLoading,
+      isDeleteLoading,
+      isEmployeeToggleLoading,
+    ],
   );
 
   const VisibilityIcon = visibility ? VISIBILITY_ICONS[visibility] : null;
@@ -126,7 +147,7 @@ export function ShareableActions({
 
   return (
     <div className="flex items-center gap-1">
-      {VisibilityIcon && (
+      {!hideVisibilityAndBookmark && VisibilityIcon && (
         <>
           {isOwner && onVisibilityChange && canChangeVisibility ? (
             <DropdownMenu>
@@ -195,8 +216,7 @@ export function ShareableActions({
         </>
       )}
 
-      {/* Bookmark */}
-      {!isOwner && onBookmarkToggle && (
+      {!hideVisibilityAndBookmark && !isOwner && onBookmarkToggle && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -226,7 +246,36 @@ export function ShareableActions({
         </Tooltip>
       )}
 
-      {/* Edit Action */}
+      {type === "agent" && onEmployeeToggle && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground hover:text-foreground"
+              data-testid="employee-button"
+              disabled={isAnyLoading || disabled}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onEmployeeToggle(isEmployee);
+              }}
+            >
+              {isEmployeeToggleLoading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : isEmployee ? (
+                <UserMinus className="size-4" />
+              ) : (
+                <UserPlus className="size-4" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isEmployee ? "移出员工列表" : "成为我的员工"}
+          </TooltipContent>
+        </Tooltip>
+      )}
+
       {isOwner && editHref && (
         <Tooltip>
           <TooltipTrigger asChild>
@@ -248,34 +297,50 @@ export function ShareableActions({
         </Tooltip>
       )}
 
-      {/* Custom Actions */}
       {isOwner && renderActions && renderActions()}
 
-      {/* Delete Action */}
       {isOwner && onDelete && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 text-muted-foreground hover:text-destructive"
+          disabled={isAnyLoading || disabled}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete();
+          }}
+        >
+          {isDeleteLoading ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Trash2 className="size-4" />
+          )}
+        </Button>
+      )}
+
+      {isOwner && onAddToStore && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="size-8 text-muted-foreground hover:text-destructive"
+              className="size-8 text-muted-foreground hover:text-foreground"
               disabled={isAnyLoading || disabled}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onDelete();
+                onAddToStore();
               }}
             >
-              {isDeleteLoading ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Trash2 className="size-4" />
-              )}
+              <Store className="size-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>{t("Common.delete")}</TooltipContent>
+          <TooltipContent>添加到商店</TooltipContent>
         </Tooltip>
       )}
     </div>
   );
 }
+
+export { ShareableActions as default };
