@@ -505,41 +505,43 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
 
           {/* Agent Suggestions - Outside input ellipse */}
           {recentAgents.length > 0 && (
-            <div className="mt-2 max-w-3xl mx-auto w-full">
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {recentAgents.map((agent) => (
-                  <AgentCardSuggestion
-                    key={agent.id}
-                    agent={agent}
-                    onClick={() => {
-                      const mention: {
-                        type: "agent";
-                        name: string;
-                        agentId: string;
-                        description: string | null | undefined;
-                        icon: { type: "emoji"; value: string; style?: Record<string, string> } | null;
-                      } = {
-                        type: "agent",
-                        name: agent.name,
-                        agentId: agent.id,
-                        description: agent.description || null,
-                        icon: agent.icon?.value
-                          ? {
-                              type: "emoji",
-                              value: agent.icon.value,
-                              style: agent.icon.style,
-                            }
-                          : null,
-                      };
-                      appStoreMutate({
-                        threadMentions: {
-                          [threadId]: [mention],
-                        },
-                      });
-                      setInput(`@${agent.name} `);
-                    }}
-                  />
-                ))}
+            <div className="mt-4 w-full">
+              <div className="max-w-3xl mx-auto">
+                <div className="flex flex-wrap gap-1.5">
+                  {recentAgents.map((agent) => (
+                    <AgentCardSuggestion
+                      key={agent.id}
+                      agent={agent}
+                      onClick={() => {
+                        const mention: {
+                          type: "agent";
+                          name: string;
+                          agentId: string;
+                          description: string | null | undefined;
+                          icon: { type: "emoji"; value: string; style?: Record<string, string> } | null;
+                        } = {
+                          type: "agent",
+                          name: agent.name,
+                          agentId: agent.id,
+                          description: agent.description || null,
+                          icon: agent.icon?.value
+                            ? {
+                                type: "emoji",
+                                value: agent.icon.value,
+                                style: agent.icon.style,
+                              }
+                            : null,
+                        };
+                        appStoreMutate({
+                          threadMentions: {
+                            [threadId]: [mention],
+                          },
+                        });
+                        setInput(`@${agent.name} `);
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           )}

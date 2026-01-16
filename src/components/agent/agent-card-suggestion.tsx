@@ -17,38 +17,33 @@ export function AgentCardSuggestion({
   return (
     <Card
       className={cn(
-        "w-full min-h-[196px] transition-colors group flex flex-col gap-3 cursor-pointer hover:bg-input",
-        "flex-shrink-0 w-48" // 固定宽度，确保显示一致
+        "transition-colors group flex flex-col gap-3 cursor-pointer hover:bg-input border-border/50",
+        "w-[calc(33.333%-0.375rem)] shrink-0" // 每行3个，减去gap的一半
       )}
       data-testid="agent-suggestion-card"
       data-item-name={agent.name}
       data-item-id={agent.id}
       onClick={() => onClick(agent)}
     >
-      <CardHeader className="shrink gap-y-0">
-        <CardTitle className="flex gap-3 items-stretch min-w-0">
+      <CardHeader className="shrink gap-y-0 p-3">
+        <CardTitle className="flex gap-2 items-start min-w-0">
           <div
             style={{ backgroundColor: agent.icon?.style?.backgroundColor }}
-            className="p-2 rounded-lg flex items-center justify-center ring ring-background border shrink-0"
+            className="p-1.5 rounded-md flex items-center justify-center ring ring-background border shrink-0"
           >
-            <Avatar className="size-6">
+            <Avatar className="size-5">
               <AvatarImage src={agent.icon?.value} />
               <AvatarFallback />
             </Avatar>
           </div>
 
-          <div className="flex flex-col justify-around min-w-0 flex-1 overflow-hidden">
+          <div className="flex flex-col justify-center min-w-0 flex-1 overflow-hidden">
             <span
-              className="truncate font-medium text-sm"
+              className="font-medium text-sm leading-tight break-words"
               data-testid="agent-suggestion-name"
             >
               {agent.name}
             </span>
-            {agent.description && (
-              <p className="text-xs text-muted-foreground truncate">
-                {agent.description}
-              </p>
-            )}
           </div>
         </CardTitle>
       </CardHeader>
