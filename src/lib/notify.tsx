@@ -63,7 +63,7 @@ export const notify = {
         resolve();
       };
       root.render(
-        <Dialog open onOpenChange={close}>
+        <Dialog open onOpenChange={(open) => !open && close()}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{alert.title}</DialogTitle>
@@ -99,7 +99,7 @@ export const notify = {
       function Component() {
         const t = useTranslations();
         return (
-          <Dialog open onOpenChange={cancel}>
+          <Dialog open onOpenChange={(open) => !open && cancel()}>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{confirm.title}</DialogTitle>
@@ -136,7 +136,7 @@ export const notify = {
       const Component = () => {
         const [text, setText] = useState("");
         return (
-          <Dialog open onOpenChange={() => close()}>
+          <Dialog open onOpenChange={(open) => !open && close()}>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{prompt.title}</DialogTitle>
