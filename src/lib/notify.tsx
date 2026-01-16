@@ -61,8 +61,8 @@ function CustomConfirmDialog({
     >
       <div
         style={{
-          backgroundColor: "hsl(var(--background))",
-          border: "1px solid hsl(var(--border))",
+          backgroundColor: "#ffffff",
+          border: "1px solid #e5e7eb",
           borderRadius: "8px",
           padding: "24px",
           maxWidth: "448px",
@@ -77,7 +77,7 @@ function CustomConfirmDialog({
               fontSize: "18px",
               fontWeight: 600,
               marginBottom: "8px",
-              color: "hsl(var(--foreground))",
+              color: "#111827",
             }}
           >
             {title}
@@ -85,7 +85,7 @@ function CustomConfirmDialog({
           <p
             style={{
               fontSize: "14px",
-              color: "hsl(var(--muted-foreground))",
+              color: "#6b7280",
               lineHeight: "1.5",
               whiteSpace: "pre-wrap",
             }}
@@ -217,8 +217,8 @@ export const notify = {
           >
             <div
               style={{
-                backgroundColor: "hsl(var(--background))",
-                border: "1px solid hsl(var(--border))",
+                backgroundColor: "#ffffff",
+                border: "1px solid #e5e7eb",
                 borderRadius: "8px",
                 padding: "24px",
                 maxWidth: "448px",
@@ -233,7 +233,7 @@ export const notify = {
                     fontSize: "18px",
                     fontWeight: 600,
                     marginBottom: "8px",
-                    color: "hsl(var(--foreground))",
+                    color: "#111827",
                   }}
                 >
                   {prompt.title}
@@ -241,7 +241,7 @@ export const notify = {
                 <div
                   style={{
                     fontSize: "14px",
-                    color: "hsl(var(--muted-foreground))",
+                    color: "#6b7280",
                   }}
                 >
                   {prompt.description}
