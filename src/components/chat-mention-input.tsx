@@ -83,6 +83,11 @@ export default function ChatMentionInput({
     [onChange, onChangeMention],
   );
 
+  // Calculate selectedIds from current mentions
+  const selectedIds = useMemo(() => {
+    return latestMentions.current;
+  }, [input, onChangeMention]);
+
   return (
     <MentionInput
       content={input}
@@ -97,6 +102,11 @@ export default function ChatMentionInput({
       onFocus={onFocus}
       onBlur={onBlur}
       fullWidthSuggestion={true}
+      suggestionProps={{
+        selectedIds,
+        open: true,
+        onOpenChange: () => {},
+      }}
     />
   );
 }

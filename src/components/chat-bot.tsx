@@ -260,10 +260,12 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     [messages.length, error],
   );
 
-  const isNewChat = useMemo(
-    () => initialMessages.length === 0,
-    [initialMessages.length],
-  );
+  const isNewChat = useMemo(() => {
+    // Only show agent cards on homepage new chat
+    // Check if thread exists in threadList (if it exists, it's not a new chat)
+    const threadExists = threadList.some(t => t.id === threadId);
+    return initialMessages.length === 0 && !threadExists;
+  }, [initialMessages.length, threadList, threadId]);
 
   const isInitialThreadEntry = useMemo(
     () =>

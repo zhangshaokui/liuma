@@ -45,13 +45,8 @@ interface MentionInputProps {
     label: string;
     id: string;
   }>;
-  Suggestion?: FC<{
-    top: number;
-    left: number;
-    onClose: () => void;
-    onSelectMention: (item: { label: string; id: string }) => void;
-    style?: React.CSSProperties;
-  }>;
+  Suggestion?: FC<any>;
+  suggestionProps?: Record<string, any>;
 }
 
 export default function MentionInput({
@@ -70,6 +65,7 @@ export default function MentionInput({
   onFocus,
   onBlur,
   fullWidthSuggestion = false,
+  suggestionProps = {},
 }: MentionInputProps) {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
@@ -263,10 +259,11 @@ export default function MentionInput({
               ? `${containerWidth}px`
               : undefined,
         }}
+        {...suggestionProps}
       />,
       document.body,
     );
-  }, [open, disabledMention, containerWidth, fullWidthSuggestion]);
+  }, [open, disabledMention, containerWidth, fullWidthSuggestion, suggestionProps]);
 
   const placeholderElement = useMemo(() => {
     if (!editor?.isEmpty) return null;
