@@ -27,7 +27,7 @@ import { appStore } from "@/app/store";
 import { useRouter } from "next/navigation";
 import { ChatMention } from "app-types/chat";
 import { BACKGROUND_COLORS, EMOJI_DATA } from "lib/const";
-import { cn } from "lib/utils";
+import { cn, generateUUID } from "lib/utils";
 import { canCreateAgent } from "lib/auth/client-permissions";
 
 const DISPLAY_LIMIT = 5; // Number of agents to show when collapsed
@@ -47,7 +47,6 @@ export function AppSidebarAgents({ userRole }: { userRole?: string | null }) {
 
   const handleAgentClick = useCallback(
     (id: string) => {
-      const currentThreadId = appStore.getState().currentThreadId;
       const agent = agents.find((agent) => agent.id === id);
 
       if (!agent) return;
@@ -60,36 +59,14 @@ export function AppSidebarAgents({ userRole }: { userRole?: string | null }) {
         description: agent.description,
       };
 
-      if (currentThreadId) {
-        appStore.setState((prev) => {
-          const currentMentions = prev.threadMentions[currentThreadId] || [];
-
-          const target = currentMentions.find(
-            (mention) =>
-              mention.type == "agent" && mention.agentId === agent.id,
-          );
-
-          if (target) {
-            return prev;
-          }
-
-          return {
-            threadMentions: {
-              ...prev.threadMentions,
-              [currentThreadId]: [
-                ...currentMentions.filter((v) => v.type != "agent"),
-                newMention,
-              ],
-            },
-          };
-        });
-      } else {
-        router.push("/");
-
-        appStore.setState(() => ({
-          pendingThreadMention: newMention,
-        }));
-      }
+      // Always create a new thread and navigate to it
+      const newThreadId = generateUUID();
+      appStore.setState(() => ({
+        threadMentions: {
+          [newThreadId]: [newMention],
+        },
+      }));
+      router.push(`/chat/${newThreadId}`);
     },
     [agents, router],
   );

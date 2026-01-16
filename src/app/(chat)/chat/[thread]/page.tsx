@@ -2,7 +2,6 @@ import { selectThreadWithMessagesAction } from "@/app/api/chat/actions";
 import ChatBot from "@/components/chat-bot";
 
 import { ChatMessage, ChatThread } from "app-types/chat";
-import { redirect, RedirectType } from "next/navigation";
 
 const fetchThread = async (
   threadId: string,
@@ -17,7 +16,6 @@ export default async function Page({
 
   const thread = await fetchThread(threadId);
 
-  if (!thread) redirect("/", RedirectType.replace);
-
-  return <ChatBot threadId={threadId} initialMessages={thread.messages} />;
+  // Don't redirect - allow new threads to be created when user sends a message
+  return <ChatBot threadId={threadId} initialMessages={thread?.messages || []} />;
 }
