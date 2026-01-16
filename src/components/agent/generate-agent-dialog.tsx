@@ -25,6 +25,7 @@ interface GenerateAgentDialogProps {
   onOpenChange: (open: boolean) => void;
   onAgentChange: (data: any) => void;
   onToolsGenerated?: (tools: string[]) => void;
+  isAdmin?: boolean;
 }
 
 export function GenerateAgentDialog({
@@ -32,6 +33,7 @@ export function GenerateAgentDialog({
   onOpenChange,
   onAgentChange,
   onToolsGenerated,
+  isAdmin = true,
 }: GenerateAgentDialogProps) {
   const t = useTranslations();
   const [generateModel, setGenerateModel] = useState<ChatModel | undefined>(
@@ -49,7 +51,8 @@ export function GenerateAgentDialog({
       }
       if (event.object) {
         onAgentChange(event.object);
-        if (event.object.tools && onToolsGenerated) {
+        // Only generate tools for admin users
+        if (isAdmin && event.object.tools && onToolsGenerated) {
           onToolsGenerated(event.object.tools);
         }
       }

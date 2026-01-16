@@ -289,38 +289,40 @@ export default function EditAgent({
                   <WandSparklesIcon className="size-3" />
                   {t("Common.generateWithAI")}
                 </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="justify-between data-[state=open]:bg-input"
-                      disabled={isLoading}
-                      data-testid="agent-create-with-example-button"
-                    >
-                      {t("Common.createWithExample")}
-                      <ChevronDownIcon className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-54" align="end">
-                    <DropdownMenuItem
-                      onClick={() => setAgent(RandomDataGeneratorExample)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span>🎲</span>
-                        <span>Generate Random Data</span>
-                      </div>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      data-testid="agent-create-with-example-weather-button"
-                      onClick={() => setAgent(WeatherExample)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span>🌤️</span>
-                        <span>Weather Checker</span>
-                      </div>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {isAdmin && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="justify-between data-[state=open]:bg-input"
+                        disabled={isLoading}
+                        data-testid="agent-create-with-example-button"
+                      >
+                        {t("Common.createWithExample")}
+                        <ChevronDownIcon className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-54" align="end">
+                      <DropdownMenuItem
+                        onClick={() => setAgent(RandomDataGeneratorExample)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>🎲</span>
+                          <span>Generate Random Data</span>
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        data-testid="agent-create-with-example-weather-button"
+                        onClick={() => setAgent(WeatherExample)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>🌤️</span>
+                          <span>Weather Checker</span>
+                        </div>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </>
             )}
 
@@ -500,29 +502,31 @@ export default function EditAgent({
             )}
           </div>
 
-          <div className="flex gap-2 flex-col">
-            <Label htmlFor="agent-tool-bindings" className="text-base">
-              {t("Agent.agentToolsLabel")}
-            </Label>
-            {false ? (
-              <Skeleton className="w-full h-12" />
-            ) : (
-              <AgentToolSelector
-                mentions={agent.instructions?.mentions || []}
-                isLoading={isLoadingTool}
-                disabled={isLoading}
-                hasEditAccess={hasEditAccess}
-                onChange={(mentions) =>
-                  setAgent({
-                    instructions: {
-                      ...agent.instructions,
-                      mentions,
-                    },
-                  })
-                }
-              />
-            )}
-          </div>
+          {isAdmin && (
+            <div className="flex gap-2 flex-col">
+              <Label htmlFor="agent-tool-bindings" className="text-base">
+                {t("Agent.agentToolsLabel")}
+              </Label>
+              {false ? (
+                <Skeleton className="w-full h-12" />
+              ) : (
+                <AgentToolSelector
+                  mentions={agent.instructions?.mentions || []}
+                  isLoading={isLoadingTool}
+                  disabled={isLoading}
+                  hasEditAccess={hasEditAccess}
+                  onChange={(mentions) =>
+                    setAgent({
+                      instructions: {
+                        ...agent.instructions,
+                        mentions,
+                      },
+                    })
+                  }
+                />
+              )}
+            </div>
+          )}
         </div>
 
         {hasEditAccess && (
@@ -556,7 +560,8 @@ export default function EditAgent({
         open={openGenerateAgentDialog}
         onOpenChange={setOpenGenerateAgentDialog}
         onAgentChange={handleAgentChange}
-        onToolsGenerated={assignToolsByNames}
+        onToolsGenerated={isAdmin ? assignToolsByNames : undefined}
+        isAdmin={isAdmin}
       />
     </ScrollArea>
   );
