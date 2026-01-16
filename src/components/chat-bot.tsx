@@ -260,6 +260,11 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     [messages.length, error],
   );
 
+  const isNewChat = useMemo(
+    () => initialMessages.length === 0,
+    [initialMessages.length],
+  );
+
   const isInitialThreadEntry = useMemo(
     () =>
       initialMessages.length > 0 &&
@@ -503,8 +508,8 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
             onFocus={isFirstTime ? undefined : handleFocus}
           />
 
-          {/* Agent Suggestions - Outside input ellipse */}
-          {recentAgents.length > 0 && (
+          {/* Agent Suggestions - Only show on new chat page */}
+          {recentAgents.length > 0 && isNewChat && (
             <div className="mt-4 w-full">
               <div className="max-w-3xl mx-auto">
                 <div className="flex flex-wrap gap-1.5">

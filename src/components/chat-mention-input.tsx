@@ -18,7 +18,7 @@ import { useTranslations } from "next-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
 import { appStore } from "@/app/store";
-import { cn, toAny } from "lib/utils";
+import { cn, toAny, fetcher } from "lib/utils";
 import { useShallow } from "zustand/shallow";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Editor } from "@tiptap/react";
@@ -28,6 +28,9 @@ import { DefaultToolIcon } from "./default-tool-icon";
 import equal from "lib/equal";
 import { EMOJI_DATA } from "lib/const";
 import { useIsMobile } from "@/hooks/use-mobile";
+import useSWR from "swr";
+import { getIsUserAdmin } from "lib/user/utils";
+import { BasicUser } from "app-types/user";
 
 type MentionItemType = {
   id: string;
@@ -163,13 +166,30 @@ export function ChatMentionInputSuggestion({
       state.agentList,
     ]),
   );
+
+  // Get user info and check if admin
+  const { data: user } = useSWR<BasicUser>("/api/user/details", fetcher, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false,
+  });
+  const isAdmin = getIsUserAdmin(user);
+
+  // For non-admin users, disable mcp, workflow, and defaultTool
+  const effectiveDisabledType = useMemo(() => {
+    if (isAdmin) {
+      return disabledType;
+    }
+    // Non-admin users can only see agents
+    return ["mcp", "workflow", "defaultTool"] as const;
+  }, [isAdmin, disabledType]);
+
   const [searchValue, setSearchValue] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const itemRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const isMobile = useIsMobile();
 
   const mcpMentions = useMemo(() => {
-    if (disabledType?.includes("mcp")) return [];
+    if (effectiveDisabledType?.includes("mcp")) return [];
     const filtered = mcpList
       ?.filter((mcp) => mcp.toolInfo?.length)
       .filter((mcp) => {
@@ -253,10 +273,10 @@ export function ChatMentionInputSuggestion({
         return [...items, ...toolItems];
       }) || []
     );
-  }, [mcpList, selectedIds, disabledType, searchValue]);
+  }, [mcpList, selectedIds, effectiveDisabledType, searchValue]);
 
   const agentMentions = useMemo(() => {
-    if (disabledType?.includes("agent")) return [];
+    if (effectiveDisabledType?.includes("agent")) return [];
     if (!agentList.length) return [];
 
     return agentList
@@ -298,10 +318,10 @@ export function ChatMentionInputSuggestion({
           ),
         };
       });
-  }, [agentList, selectedIds, disabledType, searchValue]);
+  }, [agentList, selectedIds, effectiveDisabledType, searchValue]);
 
   const workflowMentions = useMemo(() => {
-    if (disabledType?.includes("workflow")) return [];
+    if (effectiveDisabledType?.includes("workflow")) return [];
     if (!workflowList.length) return [];
 
     return workflowList
@@ -341,10 +361,10 @@ export function ChatMentionInputSuggestion({
           ),
         };
       });
-  }, [workflowList, selectedIds, disabledType, searchValue]);
+  }, [workflowList, selectedIds, effectiveDisabledType, searchValue]);
 
   const defaultToolMentions = useMemo(() => {
-    if (disabledType?.includes("defaultTool")) return [];
+    if (effectiveDisabledType?.includes("defaultTool")) return [];
     const items = Object.values(DefaultToolName).map((toolName) => {
       let label = toolName as string;
       const icon = <DefaultToolIcon name={toolName} />;
@@ -423,7 +443,7 @@ export function ChatMentionInputSuggestion({
           ),
         };
       });
-  }, [selectedIds, disabledType, searchValue]);
+  }, [selectedIds, effectiveDisabledType, searchValue]);
 
   const trigger = useMemo(() => {
     if (children) return children;
