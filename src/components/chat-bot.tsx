@@ -42,7 +42,6 @@ import {
 } from "ui/dialog";
 import { useTranslations } from "next-intl";
 import { Think } from "ui/think";
-import { useGenerateThreadTitle } from "@/hooks/queries/use-generate-thread-title";
 import dynamic from "next/dynamic";
 import { useMounted } from "@/hooks/use-mounted";
 import { getStorageManager } from "lib/browser-stroage";
