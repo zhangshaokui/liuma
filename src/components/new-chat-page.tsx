@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PromptInput from "./prompt-input";
 import clsx from "clsx";
 import { appStore } from "@/app/store";
-import { cn, createDebounce, generateUUID } from "lib/utils";
+import { cn, createDebounce, generateUUID, truncateString } from "lib/utils";
 import { ErrorMessage, PreviewMessage } from "./message";
 import { ChatGreeting } from "./chat-greeting";
 
@@ -49,6 +49,8 @@ import { getStorageManager } from "lib/browser-stroage";
 import { AnimatePresence, motion } from "framer-motion";
 import { useThreadFileUploader } from "@/hooks/use-thread-file-uploader";
 import { useFileDragOverlay } from "@/hooks/use-file-drag-overlay";
+import { useRecentAgents } from "@/hooks/use-recent-agents";
+import { AgentCardSuggestion } from "@/components/agent/agent-card-suggestion";
 
 type Props = {
   threadId: string;
@@ -70,7 +72,7 @@ const firstTimeStorage = getStorageManager("IS_FIRST");
 const isFirstTime = firstTimeStorage.get() ?? true;
 firstTimeStorage.set(false);
 
-export default function ChatBot({ threadId, initialMessages }: Props) {
+export default function NewChatPage({ threadId, initialMessages }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const { uploadFiles } = useThreadFileUploader(threadId);
@@ -109,11 +111,40 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
     ]),
   );
 
+  const generateTitle = useGenerateThreadTitle({
+    threadId,
+  });
+
+  const recentAgents = useRecentAgents(3);
+
   const [showParticles, setShowParticles] = useState(isFirstTime);
 
   const onFinish = useCallback(() => {
-    // Thread completion handling
-    mutate("/api/thread");
+    const messages = latestRef.current.messages;
+    const prevThread = latestRef.current.threadList.find(
+      (v) => v.id === threadId,
+    );
+    const isNewThread =
+      !prevThread?.title &&
+      messages.filter((v) => v.role === "user" || v.role === "assistant")
+        .length < 3;
+    if (isNewThread) {
+      const part = messages
+        .slice(0, 2)
+        .flatMap((m) =>
+          m.parts
+            .filter((v) => v.type === "text")
+            .map(
+              (p) =>
+                `${m.role}: ${truncateString((p as TextUIPart).text, 500)}`,
+            ),
+        );
+      if (part.length > 0) {
+        generateTitle(part.join("\n\n"));
+      }
+    } else if (latestRef.current.threadList[0]?.id !== threadId) {
+      mutate("/api/thread");
+    }
   }, []);
 
   const [input, setInput] = useState("");
@@ -471,6 +502,49 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
             onStop={stop}
             onFocus={isFirstTime ? undefined : handleFocus}
           />
+
+          {/* Agent Suggestions - Only on new chat page */}
+          {recentAgents.length > 0 && (
+            <div className="mt-4 w-full">
+              <div className="max-w-3xl mx-auto">
+                <div className="flex flex-wrap gap-1.5">
+                  {recentAgents.map((agent) => (
+                    <AgentCardSuggestion
+                      key={agent.id}
+                      agent={agent}
+                      onClick={() => {
+                        const mention: {
+                          type: "agent";
+                          name: string;
+                          agentId: string;
+                          description: string | null | undefined;
+                          icon: { type: "emoji"; value: string; style?: Record<string, string> } | null;
+                        } = {
+                          type: "agent",
+                          name: agent.name,
+                          agentId: agent.id,
+                          description: agent.description || null,
+                          icon: agent.icon?.value
+                            ? {
+                                type: "emoji",
+                                value: agent.icon.value,
+                                style: agent.icon.style,
+                              }
+                            : null,
+                        };
+                        appStoreMutate({
+                          threadMentions: {
+                            [threadId]: [mention],
+                          },
+                        });
+                        setInput(`@${agent.name} `);
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         <DeleteThreadPopup
           threadId={threadId}

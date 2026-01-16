@@ -1,4 +1,4 @@
-import ChatBot from "@/components/chat-bot";
+import NewChatPage from "@/components/new-chat-page";
 import { generateUUID } from "lib/utils";
 import { getSession } from "auth/server";
 import { redirect } from "next/navigation";
@@ -11,5 +11,5 @@ export default async function HomePage() {
     redirect("/sign-in");
   }
   const id = generateUUID();
-  return <ChatBot initialMessages={[]} threadId={id} key={id} />;
+  return <NewChatPage initialMessages={[]} threadId={id} key={id} />;
 }
