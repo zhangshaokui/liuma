@@ -49,6 +49,8 @@ import { getStorageManager } from "lib/browser-stroage";
 import { AnimatePresence, motion } from "framer-motion";
 import { useThreadFileUploader } from "@/hooks/use-thread-file-uploader";
 import { useFileDragOverlay } from "@/hooks/use-file-drag-overlay";
+import { useRecentAgents } from "@/hooks/use-recent-agents";
+import { AgentCardSuggestion } from "@/components/agent/agent-card-suggestion";
 
 type Props = {
   threadId: string;
@@ -112,6 +114,8 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
   const generateTitle = useGenerateThreadTitle({
     threadId,
   });
+
+  const recentAgents = useRecentAgents(3);
 
   const [showParticles, setShowParticles] = useState(isFirstTime);
 
@@ -498,6 +502,34 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
             onStop={stop}
             onFocus={isFirstTime ? undefined : handleFocus}
           />
+
+          {/* Agent Suggestions - Outside input ellipse */}
+          {recentAgents.length > 0 && (
+            <div className="mt-2 max-w-3xl mx-auto w-full">
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {recentAgents.map((agent) => (
+                  <AgentCardSuggestion
+                    key={agent.id}
+                    agent={agent}
+                    onClick={() => {
+                      const mention = {
+                        type: "agent",
+                        id: agent.id,
+                        name: agent.name,
+                        avatar: agent.icon?.value,
+                      } as const;
+                      appStoreMutate({
+                        threadMentions: {
+                          [threadId]: [mention],
+                        },
+                      });
+                      setInput(`@${agent.name} `);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <DeleteThreadPopup
           threadId={threadId}
