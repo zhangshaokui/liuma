@@ -1,12 +1,10 @@
 "use client";
-import { appStore } from "@/app/store";
-import { AudioWaveformIcon, PencilLine } from "lucide-react";
+import { PencilLine } from "lucide-react";
 import { type PropsWithChildren, useState } from "react";
 import { Command, CommandGroup, CommandItem, CommandList } from "ui/command";
 import { Separator } from "ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useTranslations } from "next-intl";
-import { generateUUID } from "lib/utils";
 import { AgentSummary } from "app-types/agent";
 import Link from "next/link";
 import { authClient } from "auth/client";
@@ -30,24 +28,6 @@ export function AgentDropdown({ agent, children, side, align }: Props) {
         <Command>
           <CommandList>
             <CommandGroup>
-              <CommandItem className="cursor-pointer p-0">
-                <div
-                  className="flex items-center gap-2 w-full px-2 py-1 rounded"
-                  onClick={() => {
-                    appStore.setState((state) => ({
-                      voiceChat: {
-                        ...state.voiceChat,
-                        isOpen: true,
-                        threadId: generateUUID(),
-                        agentId: agent.id,
-                      },
-                    }));
-                  }}
-                >
-                  <AudioWaveformIcon className="text-foreground" />
-                  <span>{t("Chat.VoiceChat.title")}</span>
-                </div>
-              </CommandItem>
               {isOwner && (
                 <CommandItem className="cursor-pointer p-0">
                   <Link

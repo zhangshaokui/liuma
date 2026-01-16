@@ -510,60 +510,62 @@ export default function PromptInput({
                   disabled={!threadId}
                 />
 
-                <DropdownMenu
-                  open={isUploadDropdownOpen}
-                  onOpenChange={setIsUploadDropdownOpen}
-                >
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant={"ghost"}
-                      size={"sm"}
-                      className="rounded-full hover:bg-input! p-2! data-[state=open]:bg-input!"
-                      disabled={!threadId}
-                    >
-                      <PlusIcon />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" side="top">
-                    <DropdownMenuItem
-                      className="cursor-pointer"
-                      disabled={
-                        modelInfo?.isImageInputUnsupported || !canUploadImages
-                      }
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <PaperclipIcon className="mr-2 size-4" />
-                      {t("uploadImage")}
-                    </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenu
+                    open={isUploadDropdownOpen}
+                    onOpenChange={setIsUploadDropdownOpen}
+                  >
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant={"ghost"}
+                        size={"sm"}
+                        className="rounded-full hover:bg-input! p-2! data-[state=open]:bg-input!"
+                        disabled={!threadId}
+                      >
+                        <PlusIcon />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" side="top">
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        disabled={
+                          modelInfo?.isImageInputUnsupported || !canUploadImages
+                        }
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <PaperclipIcon className="mr-2 size-4" />
+                        {t("uploadImage")}
+                      </DropdownMenuItem>
 
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger className="cursor-pointer">
-                        <ImagesIcon className="mr-4 size-4 text-muted-foreground" />
-                        <span className="mr-4">{t("generateImage")}</span>
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuSubContent>
-                          <DropdownMenuItem
-                            disabled={modelInfo?.isToolCallUnsupported}
-                            onClick={() => handleGenerateImage("google")}
-                            className="cursor-pointer"
-                          >
-                            <GeminiIcon className="mr-2 size-4" />
-                            Gemini (Nano Banana)
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={modelInfo?.isToolCallUnsupported}
-                            onClick={() => handleGenerateImage("openai")}
-                            className="cursor-pointer"
-                          >
-                            <OpenAIIcon className="mr-2 size-4" />
-                            OpenAI
-                          </DropdownMenuItem>
-                        </DropdownMenuSubContent>
-                      </DropdownMenuPortal>
-                    </DropdownMenuSub>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger className="cursor-pointer">
+                          <ImagesIcon className="mr-4 size-4 text-muted-foreground" />
+                          <span className="mr-4">{t("generateImage")}</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                          <DropdownMenuSubContent>
+                            <DropdownMenuItem
+                              disabled={modelInfo?.isToolCallUnsupported}
+                              onClick={() => handleGenerateImage("google")}
+                              className="cursor-pointer"
+                            >
+                              <GeminiIcon className="mr-2 size-4" />
+                              Gemini (Nano Banana)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={modelInfo?.isToolCallUnsupported}
+                              onClick={() => handleGenerateImage("openai")}
+                              className="cursor-pointer"
+                            >
+                              <OpenAIIcon className="mr-2 size-4" />
+                              OpenAI
+                            </DropdownMenuItem>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuSub>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
 
                 {!toolDisabled &&
                   (imageToolModel ? (
