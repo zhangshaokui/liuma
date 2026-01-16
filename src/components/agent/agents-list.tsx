@@ -80,6 +80,7 @@ export function AgentsList({
 
   const deleteAgent = async (agentId: string) => {
     const ok = await notify.confirm({
+      title: t("Common.delete"),
       description: t("Agent.deleteConfirm"),
     });
     if (!ok) return;
