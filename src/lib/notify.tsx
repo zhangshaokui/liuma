@@ -80,6 +80,7 @@ export const notify = {
     });
   },
   confirm: (confirm: Alert & { okText?: string; cancelText?: string }) => {
+    console.log("notify.confirm called with:", confirm);
     return new Promise<boolean>((resolve) => {
       const container = createContainer();
       const root = createRoot(container);
@@ -88,16 +89,19 @@ export const notify = {
         container.remove();
       };
       const ok = () => {
+        console.log("Confirm OK clicked");
         resolve(true);
         close();
       };
       const cancel = () => {
+        console.log("Confirm cancelled");
         resolve(false);
         close();
       };
 
       function Component() {
         const t = useTranslations();
+        console.log("Confirm Component rendering");
         return (
           <Dialog open onOpenChange={(open) => !open && cancel()}>
             <DialogContent>

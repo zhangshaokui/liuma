@@ -89,15 +89,15 @@ export function ShareableCard({
 
   return (
     <>
-      <Link href={href} title={item.name}>
-        <Card
-          className={cn(
-            "w-full min-h-[196px] @container transition-colors group flex flex-col gap-3 cursor-pointer hover:bg-input",
-          )}
-          data-testid={`${type}-card`}
-          data-item-name={item.name}
-          data-item-id={item.id}
-        >
+      <Card
+        className={cn(
+          "w-full min-h-[196px] @container transition-colors group flex flex-col gap-3 hover:bg-input",
+        )}
+        data-testid={`${type}-card`}
+        data-item-name={item.name}
+        data-item-id={item.id}
+      >
+        <Link href={href} title={item.name} className="flex-1 flex flex-col">
           <CardHeader className="shrink gap-y-0">
             <CardTitle className="flex gap-3 items-stretch min-w-0">
               <div
@@ -140,60 +140,58 @@ export function ShareableCard({
               {item.description}
             </CardDescription>
           </CardContent>
+        </Link>
 
-          <CardFooter className="shrink min-h-0 overflow-visible">
-            <div className="flex items-center justify-between w-full min-w-0">
-              <div onClick={(e) => e.stopPropagation()}>
-                <ShareableActions
-                  type={type}
-                  visibility={visibility}
-                  isOwner={isOwner}
-                  isBookmarked={isBookmarked}
-                  editHref={href}
-                  onVisibilityChange={
-                    onVisibilityChange
-                      ? (visibility) => onVisibilityChange(item.id, visibility)
-                      : undefined
-                  }
-                  onBookmarkToggle={
-                    onBookmarkToggle
-                      ? (isBookmarked) => onBookmarkToggle(item.id, isBookmarked)
-                      : undefined
-                  }
-                  onDelete={onDelete ? () => onDelete(item.id) : undefined}
-                  isBookmarkToggleLoading={isBookmarkToggleLoading}
-                  isVisibilityChangeLoading={isVisibilityChangeLoading}
-                  isDeleteLoading={isDeleteLoading}
-                  disabled={actionsDisabled}
-                  isEmployee={isEmployee}
-                  onEmployeeToggle={
-                    onEmployeeToggle
-                      ? (isEmployee) => onEmployeeToggle(item.id, isEmployee)
-                      : undefined
-                  }
-                  isEmployeeToggleLoading={isEmployeeToggleLoading}
-                  hideVisibilityAndBookmark={hideVisibilityAndBookmark}
-                  onAddToStore={onAddToStore}
-                />
+        <CardFooter className="shrink min-h-0 overflow-visible">
+          <div className="flex items-center justify-between w-full min-w-0">
+            <ShareableActions
+              type={type}
+              visibility={visibility}
+              isOwner={isOwner}
+              isBookmarked={isBookmarked}
+              editHref={href}
+              onVisibilityChange={
+                onVisibilityChange
+                  ? (visibility) => onVisibilityChange(item.id, visibility)
+                  : undefined
+              }
+              onBookmarkToggle={
+                onBookmarkToggle
+                  ? (isBookmarked) => onBookmarkToggle(item.id, isBookmarked)
+                  : undefined
+              }
+              onDelete={onDelete ? () => onDelete(item.id) : undefined}
+              isBookmarkToggleLoading={isBookmarkToggleLoading}
+              isVisibilityChangeLoading={isVisibilityChangeLoading}
+              isDeleteLoading={isDeleteLoading}
+              disabled={actionsDisabled}
+              isEmployee={isEmployee}
+              onEmployeeToggle={
+                onEmployeeToggle
+                  ? (isEmployee) => onEmployeeToggle(item.id, isEmployee)
+                  : undefined
+              }
+              isEmployeeToggleLoading={isEmployeeToggleLoading}
+              hideVisibilityAndBookmark={hideVisibilityAndBookmark}
+              onAddToStore={onAddToStore}
+            />
+
+            {!isOwner && item.userName && (
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Avatar className="size-4 ring shrink-0 rounded-full">
+                  <AvatarImage src={item.userAvatar || undefined} />
+                  <AvatarFallback>
+                    {item.userName[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-xs text-muted-foreground font-medium truncate min-w-0">
+                  {item.userName}
+                </span>
               </div>
-
-              {!isOwner && item.userName && (
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <Avatar className="size-4 ring shrink-0 rounded-full">
-                    <AvatarImage src={item.userAvatar || undefined} />
-                    <AvatarFallback>
-                      {item.userName[0]?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-xs text-muted-foreground font-medium truncate min-w-0">
-                    {item.userName}
-                  </span>
-                </div>
-              )}
-            </div>
-          </CardFooter>
-        </Card>
-      </Link>
+            )}
+          </div>
+        </CardFooter>
+      </Card>
 
       {extraContent}
     </>
