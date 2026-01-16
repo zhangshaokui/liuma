@@ -512,12 +512,25 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
                     key={agent.id}
                     agent={agent}
                     onClick={() => {
-                      const mention = {
+                      const mention: {
+                        type: "agent";
+                        name: string;
+                        agentId: string;
+                        description: string | null | undefined;
+                        icon: { type: "emoji"; value: string; style?: Record<string, string> } | null;
+                      } = {
                         type: "agent",
-                        id: agent.id,
                         name: agent.name,
-                        avatar: agent.icon?.value,
-                      } as const;
+                        agentId: agent.id,
+                        description: agent.description || null,
+                        icon: agent.icon?.value
+                          ? {
+                              type: "emoji",
+                              value: agent.icon.value,
+                              style: agent.icon.style,
+                            }
+                          : null,
+                      };
                       appStoreMutate({
                         threadMentions: {
                           [threadId]: [mention],
