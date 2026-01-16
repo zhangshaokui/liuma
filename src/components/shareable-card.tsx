@@ -9,8 +9,9 @@ import {
   CardTitle,
 } from "ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
 import { cn } from "lib/utils";
 import { ShareableActions, type Visibility } from "./shareable-actions";
 import { WorkflowSummary } from "app-types/workflow";
@@ -72,9 +73,19 @@ export function ShareableCard({
   extraContent,
 }: ShareableCardProps) {
   const t = useTranslations();
+  const locale = useLocale();
   const isPublished = (item as WorkflowSummary).isPublished;
   const isBookmarked =
     type === "mcp" ? undefined : (item as AgentSummary).isBookmarked;
+
+  // Format date based on locale
+  const formatDate = (date: Date) => {
+    if (locale === "zh") {
+      return format(date, "yyyy.MM.dd");
+    } else {
+      return format(date, "MMM d, yyyy");
+    }
+  };
 
   return (
     <>
@@ -112,7 +123,7 @@ export function ShareableCard({
                 </span>
                 <div className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
                   <time className="shrink-0">
-                    {format(item.updatedAt || new Date(), "MMM d, yyyy")}
+                    {formatDate(item.updatedAt || new Date())}
                   </time>
                   {type === "workflow" && !isPublished && (
                     <span className="px-2 rounded-sm bg-secondary text-foreground shrink-0">

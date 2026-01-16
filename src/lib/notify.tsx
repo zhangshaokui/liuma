@@ -4,6 +4,7 @@ import { generateUUID } from "lib/utils";
 import { ReactNode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Button } from "ui/button";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -96,6 +97,7 @@ export const notify = {
       };
 
       function Component() {
+        const t = useTranslations();
         return (
           <Dialog open onOpenChange={cancel}>
             <DialogContent>
@@ -107,10 +109,10 @@ export const notify = {
               </DialogHeader>
               <DialogFooter>
                 <Button variant={"ghost"} onClick={cancel}>
-                  {confirm.cancelText || "Cancel"}
+                  {confirm.cancelText || t("Common.cancel")}
                 </Button>
                 <Button variant={"secondary"} onClick={ok}>
-                  {confirm.okText || "Confirm"}
+                  {confirm.okText || t("Common.confirm")}
                 </Button>
               </DialogFooter>
             </DialogContent>

@@ -60,6 +60,8 @@ import useSWR from "swr";
 import { fetcher } from "lib/utils";
 import { getIsUserAdmin } from "lib/user/utils";
 import { BasicUser } from "app-types/user";
+import { useRecentAgents } from "@/hooks/use-recent-agents";
+import { AgentCardSuggestion } from "@/components/agent/agent-card-suggestion";
 
 interface PromptInputProps {
   placeholder?: string;
@@ -111,6 +113,7 @@ export default function PromptInput({
     shouldRetryOnError: false,
   });
   const isAdmin = getIsUserAdmin(user);
+  const recentAgents = useRecentAgents(3);
 
   const [
     globalModel,
@@ -811,6 +814,22 @@ export default function PromptInput({
                     );
                   })}
                 </div>
+              )}
+
+              {/* Agent Suggestions - Below Input with 2-line gap */}
+              {recentAgents.length > 0 && (
+                <>
+                  <div className="h-8" /> {/* 2-line character gap */}
+                  <div className="flex gap-2 overflow-x-auto pb-2">
+                    {recentAgents.map((agent) => (
+                      <AgentCardSuggestion
+                        key={agent.id}
+                        agent={agent}
+                        onClick={onSelectAgent}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </div>
