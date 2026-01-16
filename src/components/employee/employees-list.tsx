@@ -12,6 +12,7 @@ import { UserMinus } from "lucide-react";
 import { Button } from "ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { Loader2 } from "lucide-react";
+import { generateUUID } from "lib/utils";
 
 interface EmployeeAgent {
   id: string;
@@ -59,8 +60,6 @@ export function EmployeesList({
 
   const handleEmployeeClick = useCallback(
     (agent: EmployeeAgent) => {
-      const currentThreadId = appStore.getState().currentThreadId;
-
       const newMention: ChatMention = {
         type: "agent",
         agentId: agent.id,
@@ -69,38 +68,14 @@ export function EmployeesList({
         description: agent.description,
       };
 
-      if (currentThreadId) {
-        // If there's a current thread, add the mention to threadMentions
-        appStore.setState((prev) => {
-          const currentMentions = prev.threadMentions[currentThreadId] || [];
-
-          const target = currentMentions.find(
-            (mention) =>
-              mention.type == "agent" && mention.agentId === agent.id,
-          );
-
-          if (target) {
-            return prev;
-          }
-
-          return {
-            threadMentions: {
-              ...prev.threadMentions,
-              [currentThreadId]: [
-                ...currentMentions.filter((v) => v.type != "agent"),
-                newMention,
-              ],
-            },
-          };
-        });
-      } else {
-        // If there's no current thread, redirect to home and set pendingThreadMention
-        router.push("/");
-
-        appStore.setState(() => ({
-          pendingThreadMention: newMention,
-        }));
-      }
+      // Always create a new thread and navigate to it
+      const newThreadId = generateUUID();
+      appStore.setState(() => ({
+        threadMentions: {
+          [newThreadId]: [newMention],
+        },
+      }));
+      router.push(`/chat/${newThreadId}`);
     },
     [router],
   );
