@@ -261,8 +261,13 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
   );
 
   const isNewChat = useMemo(() => {
-    // Only show agent cards on homepage new chat
-    // Check if thread exists in threadList (if it exists, it's not a new chat)
+    // Only show agent cards on homepage (/), not on /chat/[threadId] pages
+    // Check if we're on the homepage by looking at the current URL
+    if (typeof window !== 'undefined') {
+      const isHomepage = window.location.pathname === '/';
+      return isHomepage;
+    }
+    // Fallback: check if thread exists in threadList
     const threadExists = threadList.some(t => t.id === threadId);
     return initialMessages.length === 0 && !threadExists;
   }, [initialMessages.length, threadList, threadId]);
