@@ -544,12 +544,18 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
                               }
                             : null,
                         };
+                        // Set flag to suppress mention popup
+                        appStoreMutate({ suppressMentionPopup: true });
                         appStoreMutate({
                           threadMentions: {
                             [threadId]: [mention],
                           },
                         });
                         setInput(`@${agent.name} `);
+                        // Clear the flag immediately so manual @ input still works
+                        setTimeout(() => {
+                          appStoreMutate({ suppressMentionPopup: false });
+                        }, 100);
                       }}
                     />
                   ))}

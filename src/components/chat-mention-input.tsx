@@ -66,6 +66,11 @@ export default function ChatMentionInput({
 }: ChatMentionInputProps) {
   const latestMentions = useRef<string[]>([]);
 
+  // Check if mention popup should be suppressed (from card click)
+  const [suppressMentionPopup] = appStore(
+    useShallow((state) => [state.suppressMentionPopup]),
+  );
+
   const handleChange = useCallback(
     ({
       text,
@@ -88,13 +93,16 @@ export default function ChatMentionInput({
     return latestMentions.current;
   }, [input, onChangeMention]);
 
+  // Combine disabledMention with suppressMentionPopup flag
+  const effectiveDisabledMention = disabledMention || suppressMentionPopup;
+
   return (
     <MentionInput
       content={input}
       onEnter={onEnter}
       placeholder={placeholder}
       suggestionChar="@"
-      disabledMention={disabledMention}
+      disabledMention={effectiveDisabledMention}
       onChange={handleChange}
       MentionItem={ChatMentionInputMentionItem}
       Suggestion={ChatMentionInputSuggestion}
