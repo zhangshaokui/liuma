@@ -1,4 +1,4 @@
-import { agentRepository } from "lib/db/repository";
+import { agentRepository, agentCategoryRepository } from "lib/db/repository";
 import { getSession } from "auth/server";
 import { z } from "zod";
 import { serverCache } from "lib/cache";
@@ -81,8 +81,19 @@ export async function POST(request: Request): Promise<Response> {
     const body = await request.json();
     const data = AgentCreateSchema.parse(body);
 
+    // If agent is set as template but no category is provided, assign to default category
+    let finalCategoryId = data.categoryId;
+    if (data.isTemplate && !data.categoryId) {
+      const categories = await agentCategoryRepository.getAllCategories();
+      if (categories.length > 0) {
+        // Use the first category (lowest sortOrder) as default
+        finalCategoryId = categories[0].id;
+      }
+    }
+
     const agent = await agentRepository.insertAgent({
       ...data,
+      categoryId: finalCategoryId,
       userId: session.user.id,
     });
     serverCache.delete(CacheKeys.agentInstructions(agent.id));
