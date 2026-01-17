@@ -21,13 +21,11 @@ import { canCreateAgent } from "lib/auth/client-permissions";
 import { AddToStoreDialog } from "@/components/agent/add-to-store-dialog";
 
 interface AgentsListProps {
-  initialMyAgents: AgentSummary[];
   userId: string;
   userRole?: string | null;
 }
 
 export function AgentsList({
-  initialMyAgents,
   userId,
   userRole,
 }: AgentsListProps) {
@@ -43,15 +41,17 @@ export function AgentsList({
     string | null
   >(null);
 
-  const { data: allAgents } = useSWR(
+  const { data: allAgents, isLoading } = useSWR<AgentSummary[]>(
     `/api/agent?filters=mine&key=${refreshKey}`,
     fetcher,
-    {
-      fallbackData: initialMyAgents,
-    },
   );
 
-  const myAgents = allAgents || initialMyAgents;
+  const myAgents: AgentSummary[] = allAgents || [];
+
+  // Don't render anything while loading to avoid flash
+  if (isLoading && !allAgents) {
+    return null;
+  }
 
   const updateVisibility = async (agentId: string, visibility: Visibility) => {
     safe(() => setVisibilityChangeLoading(agentId))
