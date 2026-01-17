@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card";
 import { Button } from "ui/button";
-import { Copy } from "lucide-react";
+import { Copy, Trash2, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { appStore } from "@/app/store";
 import { ChatMention } from "app-types/chat";
@@ -24,6 +24,8 @@ interface TemplateCardProps {
 export function TemplateCard({ template, userId, userRole }: TemplateCardProps) {
   const router = useRouter();
   const [isCopying, setIsCopying] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const isAdmin = userRole === 'admin';
   const t = useTranslations();
 
   const handleCopyClick = async (e: React.MouseEvent) => {
@@ -46,6 +48,38 @@ export function TemplateCard({ template, userId, userRole }: TemplateCardProps) 
       toast.error("复制模板失败");
     } finally {
       setIsCopying(false);
+    }
+  };
+
+  const handleRemoveFromMarket = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsRemoving(true);
+
+    try {
+      const response = await fetch("/api/agent/" + template.id, {
+        method: "PUT",
+        body: JSON.stringify({
+          isTemplate: false,
+          categoryId: null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to remove from market");
+      }
+
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      toast.success("已从人才市场移除");
+      // 刷新页面以更新列表
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "移除失败");
+    } finally {
+      setIsRemoving(false);
     }
   };
 
@@ -121,15 +155,31 @@ export function TemplateCard({ template, userId, userRole }: TemplateCardProps) 
             </div>
           )}
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 text-muted-foreground hover:text-foreground"
-            onClick={handleCopyClick}
-            disabled={isCopying}
-          >
-            <Copy className={cn("size-4", isCopying && "animate-spin")} />
-          </Button>
+          {isAdmin ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground hover:text-destructive"
+              onClick={handleRemoveFromMarket}
+              disabled={isRemoving}
+            >
+              {isRemoving ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Trash2 className="size-4" />
+              )}
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground hover:text-foreground"
+              onClick={handleCopyClick}
+              disabled={isCopying}
+            >
+              <Copy className={cn("size-4", isCopying && "animate-spin")} />
+            </Button>
+          )}
         </div>
       </CardFooter>
     </Card>
