@@ -30,6 +30,8 @@ interface AddToStoreDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdded?: () => void;
+  initialCategoryId?: string;
+  isTemplate?: boolean;
 }
 
 export function AddToStoreDialog({
@@ -38,17 +40,19 @@ export function AddToStoreDialog({
   open,
   onOpenChange,
   onAdded,
+  initialCategoryId,
+  isTemplate = false,
 }: AddToStoreDialogProps) {
-  const [categoryId, setCategoryId] = useState<string>("");
+  const [categoryId, setCategoryId] = useState<string>(initialCategoryId || "");
   const [isAdding, setIsAdding] = useState(false);
 
   const { categories = [], isLoading } = useCategories();
 
   useEffect(() => {
-    if (!open) {
-      setCategoryId("");
+    if (open) {
+      setCategoryId(initialCategoryId || "");
     }
-  }, [open]);
+  }, [open, initialCategoryId]);
 
   const handleAddToStore = async () => {
     if (!categoryId) {
@@ -70,7 +74,7 @@ export function AddToStoreDialog({
         throw new Error(response.error);
       }
 
-      toast.success("已添加到智能体商店");
+      toast.success(isTemplate ? "已更新智能体商店设置" : "已添加到智能体商店");
       onOpenChange(false);
       setCategoryId("");
       onAdded?.();
@@ -85,9 +89,14 @@ export function AddToStoreDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>添加到智能体商店</DialogTitle>
+          <DialogTitle>
+            {isTemplate ? "编辑智能体商店设置" : "添加到智能体商店"}
+          </DialogTitle>
           <DialogDescription>
-            选择 {agentName} 要添加到的类别
+            {isTemplate
+              ? `修改 ${agentName} 在智能体商店中的类别`
+              : `选择 ${agentName} 要添加到的类别`}
+            }
           </DialogDescription>
         </DialogHeader>
 
@@ -128,10 +137,10 @@ export function AddToStoreDialog({
             {isAdding ? (
               <>
                 <Loader2 className="size-4 animate-spin mr-2" />
-                添加中...
+                {isTemplate ? "更新中..." : "添加中..."}
               </>
             ) : (
-              "添加"
+              isTemplate ? "更新" : "添加"
             )}
           </Button>
         </DialogFooter>

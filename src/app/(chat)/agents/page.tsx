@@ -1,4 +1,3 @@
-import { agentRepository } from "lib/db/repository";
 import { getSession } from "auth/server";
 import { notFound } from "next/navigation";
 import { AgentsList } from "@/components/agent/agents-list";
@@ -13,16 +12,8 @@ export default async function AgentsPage() {
     notFound();
   }
 
-  // Fetch only my agents
-  const myAgents = await agentRepository.selectAgents(
-    session.user.id,
-    ["mine"],
-    50,
-  );
-
   return (
     <AgentsList
-      initialMyAgents={myAgents}
       userId={session.user.id}
       userRole={session.user.role}
     />

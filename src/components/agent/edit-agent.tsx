@@ -42,6 +42,7 @@ import {
 } from "ui/select";
 import { ShareableActions } from "@/components/shareable-actions";
 import { GenerateAgentDialog } from "./generate-agent-dialog";
+import { AddToStoreDialog } from "./add-to-store-dialog";
 import { AgentIconPicker } from "./agent-icon-picker";
 import { AgentToolSelector } from "./agent-tool-selector";
 import {
@@ -97,6 +98,7 @@ export default function EditAgent({
 
   const [openGenerateAgentDialog, setOpenGenerateAgentDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAddToStoreDialogOpen, setIsAddToStoreDialogOpen] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -335,6 +337,11 @@ export default function EditAgent({
                   editHref={`/agent/${initialAgent.id}`}
                   onDelete={deleteAgent}
                   isDeleteLoading={isLoading}
+                  onAddToStore={
+                    userRole === 'admin'
+                      ? () => setIsAddToStoreDialogOpen(true)
+                      : undefined
+                  }
                 />
               </div>
             )}
@@ -563,6 +570,21 @@ export default function EditAgent({
         onToolsGenerated={isAdmin ? assignToolsByNames : undefined}
         isAdmin={isAdmin}
       />
+
+      {isAddToStoreDialogOpen && initialAgent && (
+        <AddToStoreDialog
+          agentId={initialAgent.id}
+          agentName={agent.name || ""}
+          open={isAddToStoreDialogOpen}
+          onOpenChange={setIsAddToStoreDialogOpen}
+          onAdded={() => {
+            setIsAddToStoreDialogOpen(false);
+            mutateAgents({ id: initialAgent.id });
+          }}
+          initialCategoryId={initialAgent.categoryId}
+          isTemplate={initialAgent.isTemplate}
+        />
+      )}
     </ScrollArea>
   );
 }
