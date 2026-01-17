@@ -143,6 +143,20 @@ export function ShareableCard({
 
           <CardFooter className="shrink min-h-0 overflow-visible">
             <div className="flex items-center justify-between w-full min-w-0">
+              {!isOwner && item.userName && (
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Avatar className="size-4 ring shrink-0 rounded-full">
+                    <AvatarImage src={item.userAvatar || undefined} />
+                    <AvatarFallback>
+                      {item.userName[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-xs text-muted-foreground font-medium truncate min-w-0">
+                    {item.userName}
+                  </span>
+                </div>
+              )}
+
               <ShareableActions
                 type={type}
                 visibility={visibility}
@@ -174,20 +188,6 @@ export function ShareableCard({
                 hideVisibilityAndBookmark={hideVisibilityAndBookmark}
                 onAddToStore={onAddToStore}
               />
-
-              {!isOwner && item.userName && (
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <Avatar className="size-4 ring shrink-0 rounded-full">
-                    <AvatarImage src={item.userAvatar || undefined} />
-                    <AvatarFallback>
-                      {item.userName[0]?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-xs text-muted-foreground font-medium truncate min-w-0">
-                    {item.userName}
-                  </span>
-                </div>
-              )}
             </div>
           </CardFooter>
         </Card>
