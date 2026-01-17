@@ -148,7 +148,7 @@ export function TemplateCard({ template, userId, userRole }: TemplateCardProps) 
       </CardContent>
 
       <CardFooter className="shrink min-h-0 overflow-visible">
-        <div className="flex items-center justify-between w-full min-w-0">
+        <div className="flex items-center gap-2 w-full min-w-0 justify-end">
           {template.categoryEmoji && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
               {template.categoryEmoji} {template.categoryName}
