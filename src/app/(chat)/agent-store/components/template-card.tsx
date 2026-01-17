@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card";
 import { Button } from "ui/button";
-import { Copy, Trash2, Loader2 } from "lucide-react";
+import { Copy, Loader2, MinusCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { appStore } from "@/app/store";
 import { ChatMention } from "app-types/chat";
@@ -166,7 +166,7 @@ export function TemplateCard({ template, userId, userRole }: TemplateCardProps) 
               {isRemoving ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
-                <Trash2 className="size-4" />
+                <MinusCircle className="size-4" />
               )}
             </Button>
           ) : (
