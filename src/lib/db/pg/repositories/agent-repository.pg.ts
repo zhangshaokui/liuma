@@ -47,6 +47,10 @@ export const pgAgentRepository: AgentRepository = {
         createdAt: AgentTable.createdAt,
         updatedAt: AgentTable.updatedAt,
         isBookmarked: sql<boolean>`${BookmarkTable.id} IS NOT NULL`,
+        isTemplate: AgentTable.isTemplate,
+        categoryId: AgentTable.categoryId,
+        copyCount: AgentTable.copyCount,
+        coverEmoji: AgentTable.coverEmoji,
       })
       .from(AgentTable)
       .leftJoin(
@@ -212,6 +216,10 @@ export const pgAgentRepository: AgentRepository = {
         userAvatar: UserTable.image,
         isBookmarked: sql<boolean>`CASE WHEN ${BookmarkTable.id} IS NOT NULL THEN true ELSE false END`,
         isEmployee: sql<boolean>`CASE WHEN ${UserEmployeeTable.id} IS NOT NULL THEN true ELSE false END`,
+        isTemplate: AgentTable.isTemplate,
+        categoryId: AgentTable.categoryId,
+        copyCount: AgentTable.copyCount,
+        coverEmoji: AgentTable.coverEmoji,
       })
       .from(AgentTable)
       .innerJoin(UserTable, eq(AgentTable.userId, UserTable.id))
