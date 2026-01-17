@@ -13,25 +13,16 @@ export default async function AgentsPage() {
     notFound();
   }
 
-  // Fetch agents data on the server
-  const allAgents = await agentRepository.selectAgents(
+  // Fetch only my agents data on the server
+  const myAgents = await agentRepository.selectAgents(
     session.user.id,
-    ["mine", "shared"],
+    ["mine"],
     50,
-  );
-
-  // Separate into my agents and shared agents
-  const myAgents = allAgents.filter(
-    (agent) => agent.userId === session.user.id,
-  );
-  const sharedAgents = allAgents.filter(
-    (agent) => agent.userId !== session.user.id,
   );
 
   return (
     <AgentsList
       initialMyAgents={myAgents}
-      initialSharedAgents={sharedAgents}
       userId={session.user.id}
       userRole={session.user.role}
     />

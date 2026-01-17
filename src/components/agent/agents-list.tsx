@@ -22,14 +22,12 @@ import { AddToStoreDialog } from "@/components/agent/add-to-store-dialog";
 
 interface AgentsListProps {
   initialMyAgents: AgentSummary[];
-  initialSharedAgents?: AgentSummary[];
   userId: string;
   userRole?: string | null;
 }
 
 export function AgentsList({
   initialMyAgents,
-  initialSharedAgents,
   userId,
   userRole,
 }: AgentsListProps) {
@@ -46,16 +44,14 @@ export function AgentsList({
   >(null);
 
   const { data: allAgents } = useSWR(
-    `/api/agent?filters=mine,shared&key=${refreshKey}`,
+    `/api/agent?filters=mine&key=${refreshKey}`,
     fetcher,
     {
-      fallbackData: [...initialMyAgents, ...(initialSharedAgents || [])],
+      fallbackData: initialMyAgents,
     },
   );
 
-  const myAgents =
-    allAgents?.filter((agent: AgentSummary) => agent.userId === userId) ||
-    initialMyAgents;
+  const myAgents = allAgents || initialMyAgents;
 
   const updateVisibility = async (agentId: string, visibility: Visibility) => {
     safe(() => setVisibilityChangeLoading(agentId))
