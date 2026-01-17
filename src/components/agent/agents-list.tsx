@@ -162,7 +162,7 @@ export function AgentsList({
                 onDelete={deleteAgent}
                 hideVisibilityAndBookmark={true}
                 onAddToStore={
-                  isAdmin
+                  isAdmin && !agent.isTemplate
                     ? () => {
                         setSelectedAgentForStore({ id: agent.id, name: agent.name });
                         setIsAddToStoreDialogOpen(true);

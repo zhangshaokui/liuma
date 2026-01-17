@@ -336,7 +336,7 @@ export function ShareableActions({
               <Store className="size-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>添加到商店</TooltipContent>
+          <TooltipContent>添加到人才市场</TooltipContent>
         </Tooltip>
       )}
     </div>

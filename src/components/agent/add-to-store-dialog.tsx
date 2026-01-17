@@ -74,7 +74,7 @@ export function AddToStoreDialog({
         throw new Error(response.error);
       }
 
-      toast.success(isTemplate ? "已更新智能体商店设置" : "已添加到智能体商店");
+      toast.success(isTemplate ? "已更新人才市场设置" : "已添加到人才市场");
       onOpenChange(false);
       setCategoryId("");
       onAdded?.();
@@ -90,11 +90,11 @@ export function AddToStoreDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {isTemplate ? "编辑智能体商店设置" : "添加到智能体商店"}
+            {isTemplate ? "编辑人才市场设置" : "添加到人才市场"}
           </DialogTitle>
           <DialogDescription>
             {isTemplate
-              ? `修改 ${agentName} 在智能体商店中的类别`
+              ? `修改 ${agentName} 在人才市场中的类别`
               : `选择 ${agentName} 要添加到的类别`}
           </DialogDescription>
         </DialogHeader>

@@ -338,7 +338,7 @@ export default function EditAgent({
                   onDelete={deleteAgent}
                   isDeleteLoading={isLoading}
                   onAddToStore={
-                    userRole === 'admin'
+                    userRole === 'admin' && !initialAgent.isTemplate
                       ? () => setIsAddToStoreDialogOpen(true)
                       : undefined
                   }
@@ -540,9 +540,9 @@ export default function EditAgent({
           <div className="flex gap-2 flex-col p-4 bg-secondary/40 rounded-lg border border-border">
             <div className="flex items-center justify-between">
               <div className="flex flex-col gap-1">
-                <Label className="text-base">智能体商店类别</Label>
+                <Label className="text-base">人才市场类别</Label>
                 <p className="text-sm text-muted-foreground">
-                  此智能体已添加到商店
+                  此智能体已添加到人才市场
                 </p>
               </div>
               <div className="flex items-center gap-2">
