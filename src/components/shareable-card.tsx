@@ -142,7 +142,7 @@ export function ShareableCard({
           </CardContent>
 
           <CardFooter className="shrink min-h-0 overflow-visible">
-            <div className="flex items-center justify-between w-full min-w-0">
+            <div className="flex items-center gap-2 w-full min-w-0">
               {!isOwner && item.userName && (
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Avatar className="size-4 ring shrink-0 rounded-full">
@@ -157,37 +157,39 @@ export function ShareableCard({
                 </div>
               )}
 
-              <ShareableActions
-                type={type}
-                visibility={visibility}
-                isOwner={isOwner}
-                isBookmarked={isBookmarked}
-                editHref={href}
-                onVisibilityChange={
-                  onVisibilityChange
-                    ? (visibility) => onVisibilityChange(item.id, visibility)
-                    : undefined
-                }
-                onBookmarkToggle={
-                  onBookmarkToggle
-                    ? (isBookmarked) => onBookmarkToggle(item.id, isBookmarked)
-                    : undefined
-                }
-                onDelete={onDelete ? () => onDelete(item.id) : undefined}
-                isBookmarkToggleLoading={isBookmarkToggleLoading}
-                isVisibilityChangeLoading={isVisibilityChangeLoading}
-                isDeleteLoading={isDeleteLoading}
-                disabled={actionsDisabled}
-                isEmployee={isEmployee}
-                onEmployeeToggle={
-                  onEmployeeToggle
-                    ? (isEmployee) => onEmployeeToggle(item.id, isEmployee)
-                    : undefined
-                }
-                isEmployeeToggleLoading={isEmployeeToggleLoading}
-                hideVisibilityAndBookmark={hideVisibilityAndBookmark}
-                onAddToStore={onAddToStore}
-              />
+              <div className="ml-auto">
+                <ShareableActions
+                  type={type}
+                  visibility={visibility}
+                  isOwner={isOwner}
+                  isBookmarked={isBookmarked}
+                  editHref={href}
+                  onVisibilityChange={
+                    onVisibilityChange
+                      ? (visibility) => onVisibilityChange(item.id, visibility)
+                      : undefined
+                  }
+                  onBookmarkToggle={
+                    onBookmarkToggle
+                      ? (isBookmarked) => onBookmarkToggle(item.id, isBookmarked)
+                      : undefined
+                  }
+                  onDelete={onDelete ? () => onDelete(item.id) : undefined}
+                  isBookmarkToggleLoading={isBookmarkToggleLoading}
+                  isVisibilityChangeLoading={isVisibilityChangeLoading}
+                  isDeleteLoading={isDeleteLoading}
+                  disabled={actionsDisabled}
+                  isEmployee={isEmployee}
+                  onEmployeeToggle={
+                    onEmployeeToggle
+                      ? (isEmployee) => onEmployeeToggle(item.id, isEmployee)
+                      : undefined
+                  }
+                  isEmployeeToggleLoading={isEmployeeToggleLoading}
+                  hideVisibilityAndBookmark={hideVisibilityAndBookmark}
+                  onAddToStore={onAddToStore}
+                />
+              </div>
             </div>
           </CardFooter>
         </Card>
