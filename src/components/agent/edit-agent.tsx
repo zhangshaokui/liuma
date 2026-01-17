@@ -536,6 +536,40 @@ export default function EditAgent({
           )}
         </div>
 
+        {isAdmin && initialAgent && initialAgent.isTemplate && (
+          <div className="flex gap-2 flex-col p-4 bg-secondary/40 rounded-lg border border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-1">
+                <Label className="text-base">智能体商店类别</Label>
+                <p className="text-sm text-muted-foreground">
+                  此智能体已添加到商店
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {initialAgent.categoryId ? (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-md border border-border">
+                    <span className="text-lg">
+                      {categories.find((c) => c.id === initialAgent.categoryId)?.emoji}
+                    </span>
+                    <span className="font-medium">
+                      {categories.find((c) => c.id === initialAgent.categoryId)?.name}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted-foreground">未设置类别</span>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsAddToStoreDialogOpen(true)}
+                >
+                  修改类别
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {hasEditAccess && (
           <div className={cn("flex justify-end gap-2")}>
             {/* Delete button - only for owners */}
@@ -581,7 +615,7 @@ export default function EditAgent({
             setIsAddToStoreDialogOpen(false);
             mutateAgents({ id: initialAgent.id });
           }}
-          initialCategoryId={initialAgent.categoryId}
+          initialCategoryId={initialAgent.categoryId || undefined}
           isTemplate={initialAgent.isTemplate}
         />
       )}

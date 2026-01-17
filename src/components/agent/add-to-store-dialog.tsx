@@ -96,7 +96,6 @@ export function AddToStoreDialog({
             {isTemplate
               ? `修改 ${agentName} 在智能体商店中的类别`
               : `选择 ${agentName} 要添加到的类别`}
-            }
           </DialogDescription>
         </DialogHeader>
 
