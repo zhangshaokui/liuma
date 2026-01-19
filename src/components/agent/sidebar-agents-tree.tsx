@@ -52,6 +52,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
   const {
     selectDepartment,
     selectGroup,
+    selectedGroup,
     openEditDepartmentDialog,
     openEditGroupDialog,
   } = useAgentManagementStore();
@@ -165,6 +166,10 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
         .ifOk(async (res) => {
           if (res.ok) {
             toast.success("小组已删除");
+            // 如果删除的是当前选中的小组，清空选择
+            if (selectedGroup === groupId) {
+              selectGroup(null);
+            }
             // 刷新部门列表
             mutate();
           }
@@ -173,7 +178,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
           toast.error("删除失败");
         });
     },
-    [mutate],
+    [mutate, selectedGroup, selectGroup],
   );
 
   if (isLoading) {
