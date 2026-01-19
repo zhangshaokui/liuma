@@ -115,8 +115,8 @@ export function AgentsList({
   };
 
   // Check if user can create agents using Better Auth permissions
-  const canCreate = canCreateAgent(userRole);
-  const isAdmin = userRole === "admin";
+  const canCreate = canCreateAgent(_userRole);
+  const isAdmin = _userRole === "admin";
 
   return (
     <div className="w-full flex flex-col gap-4 p-8">
