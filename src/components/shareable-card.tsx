@@ -150,24 +150,30 @@ export function ShareableCard({
           </CardHeader>
 
           <CardContent className="min-h-0 grow">
-            <CardDescription className="text-xs line-clamp-3 break-words overflow-hidden">
-              {item.description}
-            </CardDescription>
+            <div className="flex gap-3">
+              <div className="flex-1 min-w-0">
+                <CardDescription className="text-xs line-clamp-3 break-words overflow-hidden">
+                  {item.description}
+                </CardDescription>
+              </div>
+              {departmentInfo &&
+                (departmentInfo.departmentName || departmentInfo.groupName) && (
+                  <div className="flex-shrink-0 text-xs text-muted-foreground text-right max-w-[120px]">
+                    <div className="line-clamp-2">
+                      <div>{departmentInfo.departmentName || "-"}</div>
+                      {departmentInfo.groupName && (
+                        <div className="text-muted-foreground/70">
+                          / {departmentInfo.groupName}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+            </div>
           </CardContent>
 
           <CardFooter className="shrink min-h-0 overflow-visible">
             <div className="flex items-center gap-2 w-full min-w-0">
-              {departmentInfo &&
-                (departmentInfo.departmentName || departmentInfo.groupName) && (
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-xs text-muted-foreground font-medium truncate min-w-0">
-                      {departmentInfo.departmentName && departmentInfo.groupName
-                        ? `${departmentInfo.departmentName} / ${departmentInfo.groupName}`
-                        : departmentInfo.departmentName ||
-                          departmentInfo.groupName}
-                    </span>
-                  </div>
-                )}
               {!isOwner && item.userName && (
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Avatar className="size-4 ring shrink-0 rounded-full">
@@ -268,26 +274,31 @@ export function ShareableCard({
             </CardHeader>
 
             <CardContent className="min-h-0 grow">
-              <CardDescription className="text-xs line-clamp-3 break-words overflow-hidden">
-                {item.description}
-              </CardDescription>
+              <div className="flex gap-3">
+                <div className="flex-1 min-w-0">
+                  <CardDescription className="text-xs line-clamp-3 break-words overflow-hidden">
+                    {item.description}
+                  </CardDescription>
+                </div>
+                {departmentInfo &&
+                  (departmentInfo.departmentName ||
+                    departmentInfo.groupName) && (
+                    <div className="flex-shrink-0 text-xs text-muted-foreground text-right max-w-[120px]">
+                      <div className="line-clamp-2">
+                        <div>{departmentInfo.departmentName || "-"}</div>
+                        {departmentInfo.groupName && (
+                          <div className="text-muted-foreground/70">
+                            / {departmentInfo.groupName}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+              </div>
             </CardContent>
 
             <CardFooter className="shrink min-h-0 overflow-visible">
               <div className="flex items-center gap-2 w-full min-w-0">
-                {departmentInfo &&
-                  (departmentInfo.departmentName ||
-                    departmentInfo.groupName) && (
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-xs text-muted-foreground font-medium truncate min-w-0">
-                        {departmentInfo.departmentName &&
-                        departmentInfo.groupName
-                          ? `${departmentInfo.departmentName} / ${departmentInfo.groupName}`
-                          : departmentInfo.departmentName ||
-                            departmentInfo.groupName}
-                      </span>
-                    </div>
-                  )}
                 {!isOwner && item.userName && (
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Avatar className="size-4 ring shrink-0 rounded-full">

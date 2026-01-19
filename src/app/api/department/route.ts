@@ -1,4 +1,4 @@
-import { departmentRepository } from "lib/db/repository";
+import { departmentRepository, agentGroupRepository } from "lib/db/repository";
 import { getSession } from "auth/server";
 import { z } from "zod";
 import { serverCache } from "lib/cache";
@@ -52,6 +52,15 @@ export async function POST(request: Request): Promise<Response> {
     const data = DepartmentCreateSchema.parse(body);
 
     const department = await departmentRepository.create(session.user.id, data);
+
+    // 自动创建一个默认组
+    await agentGroupRepository.create(session.user.id, {
+      departmentId: department.id,
+      name: "默认组",
+      color: "#94a3b8",
+      icon: "📁",
+      type: "system",
+    });
 
     // Clear cache
     serverCache.delete(CacheKeys.userDepartments(session.user.id));

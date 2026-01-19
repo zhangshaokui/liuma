@@ -30,12 +30,14 @@ export function AgentsManagedList({
   const mutateAgents = useMutateAgents();
   const {
     isCreateDepartmentDialogOpen,
+    isEditDepartmentDialogOpen,
     isCreateGroupDialogOpen,
     isEditGroupDialogOpen,
     isMoveAgentDialogOpen,
     openCreateDepartmentDialog,
     openCreateGroupDialog,
     closeCreateDepartmentDialog,
+    closeEditDepartmentDialog,
     closeCreateGroupDialog,
     closeEditGroupDialog,
     closeMoveAgentDialog,
@@ -114,6 +116,15 @@ export function AgentsManagedList({
         <CreateDepartmentDialog
           open={isCreateDepartmentDialogOpen}
           onOpenChange={(open) => !open && closeCreateDepartmentDialog()}
+          onSuccess={handleRefresh}
+        />
+      )}
+
+      {/* 编辑部门对话框 */}
+      {isEditDepartmentDialogOpen && (
+        <CreateDepartmentDialog
+          open={isEditDepartmentDialogOpen}
+          onOpenChange={(open) => !open && closeEditDepartmentDialog()}
           onSuccess={handleRefresh}
         />
       )}
