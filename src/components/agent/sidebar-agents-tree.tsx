@@ -115,17 +115,6 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
     [router],
   );
 
-  const _handleDepartmentClick = useCallback(
-    (deptId: string) => {
-      // 设置选中的部门，清空小组选择
-      selectDepartment(deptId);
-      selectGroup(null);
-      // 跳转到 /agents 页面
-      router.push(`/agents?dept=${deptId}`);
-    },
-    [router, selectDepartment, selectGroup],
-  );
-
   const handleGroupClick = useCallback(
     (groupId: string) => {
       // 设置选中的小组，清空部门选择
@@ -226,7 +215,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                       <span className="text-sm mr-1">{dept.icon}</span>
                       <span
                         className="flex-1 text-sm truncate cursor-pointer hover:underline"
-                        onClick={() => _handleDepartmentClick(dept.id)}
+                        onClick={() => toggleDepartment(dept.id)}
                       >
                         {dept.name}
                       </span>
@@ -234,55 +223,37 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                         {agentCount}
                       </span>
                       {canCreateAgent(userRole) && (
-                        <>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  router.push("/agents?action=createGroup");
-                                }}
-                                className="flex-shrink-0 w-5 h-5 flex items-center justify-center opacity-0 group-hover/dept:opacity-100 hover:bg-accent rounded transition-opacity"
-                              >
-                                <Plus className="w-3 h-3" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="right">
-                              新建小组
-                            </TooltipContent>
-                          </Tooltip>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button
-                                onClick={(e) => e.stopPropagation()}
-                                className="flex-shrink-0 w-5 h-5 flex items-center justify-center hover:bg-accent rounded"
-                              >
-                                <MoreHorizontal className="w-3 h-3" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  openEditDepartmentDialog(dept);
-                                }}
-                              >
-                                <Pencil className="w-4 h-4 mr-2" />
-                                重命名
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handleDeleteDepartment(dept.id, dept.name);
-                                }}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                删除
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex-shrink-0 w-5 h-5 flex items-center justify-center hover:bg-accent rounded"
+                            >
+                              <MoreHorizontal className="w-3 h-3" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.preventDefault();
+                                openEditDepartmentDialog(dept);
+                              }}
+                            >
+                              <Pencil className="w-4 h-4 mr-2" />
+                              重命名
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleDeleteDepartment(dept.id, dept.name);
+                              }}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              删除
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
                     </div>
                   </SidebarMenuItem>

@@ -31,11 +31,13 @@ export function AgentsManagedList({
   const {
     isCreateDepartmentDialogOpen,
     isCreateGroupDialogOpen,
+    isEditGroupDialogOpen,
     isMoveAgentDialogOpen,
     openCreateDepartmentDialog,
     openCreateGroupDialog,
     closeCreateDepartmentDialog,
     closeCreateGroupDialog,
+    closeEditGroupDialog,
     closeMoveAgentDialog,
     creatingGroupDepartmentId,
     selectDepartment,
@@ -122,6 +124,15 @@ export function AgentsManagedList({
           open={isCreateGroupDialogOpen}
           onOpenChange={(open) => !open && closeCreateGroupDialog()}
           defaultDepartmentId={creatingGroupDepartmentId || undefined}
+          onSuccess={handleRefresh}
+        />
+      )}
+
+      {/* 编辑小组对话框 */}
+      {isEditGroupDialogOpen && (
+        <CreateGroupDialog
+          open={isEditGroupDialogOpen}
+          onOpenChange={(open) => !open && closeEditGroupDialog()}
           onSuccess={handleRefresh}
         />
       )}
