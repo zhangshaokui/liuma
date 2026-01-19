@@ -1,6 +1,6 @@
 import { getSession } from "auth/server";
 import { notFound } from "next/navigation";
-import { AgentsList } from "@/components/agent/agents-list";
+import { AgentsManagedList } from "@/components/agent/agents-managed-list";
 
 // Force dynamic rendering to avoid static generation issues with session
 export const dynamic = "force-dynamic";
@@ -13,9 +13,6 @@ export default async function AgentsPage() {
   }
 
   return (
-    <AgentsList
-      userId={session.user.id}
-      userRole={session.user.role}
-    />
+    <AgentsManagedList userId={session.user.id} userRole={session.user.role} />
   );
 }

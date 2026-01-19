@@ -16,14 +16,39 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const queryParams = Object.fromEntries(url.searchParams);
+
+    // Extract groupId and departmentId from query params
+    const groupId = url.searchParams.get("groupId");
+    const departmentId = url.searchParams.get("departmentId");
+    const limitStr = url.searchParams.get("limit");
+    const limit = limitStr ? parseInt(limitStr) : 100;
+
+    // If groupId is provided, fetch agents by groupId
+    if (groupId) {
+      const agents = await agentRepository.selectAgentsByGroupId(
+        session.user.id,
+        groupId,
+      );
+      return Response.json(agents.slice(0, limit));
+    }
+
+    // If departmentId is provided, fetch agents by departmentId
+    if (departmentId) {
+      const agents = await agentRepository.selectAgentsByDepartmentId(
+        session.user.id,
+        departmentId,
+      );
+      return Response.json(agents.slice(0, limit));
+    }
+
+    // Otherwise, use the original query schema
     const {
       type,
       filters: filtersParam,
       group,
-      limit,
     } = AgentQuerySchema.parse(queryParams);
 
-    // If group parameter is provided, fetch agents by group
+    // If group parameter is provided, fetch agents by group name (legacy)
     if (group) {
       const agents = await agentRepository.selectAgentsByGroup(
         session.user.id,

@@ -68,11 +68,11 @@ export async function POST(request: Request) {
     );
 
     if (!group) {
-      group = await agentGroupRepository.createGroup(
-        session.user.id,
-        "我的AI员工",
-        "system",
-      );
+      group = await agentGroupRepository.createGroup(session.user.id, {
+        name: "我的AI员工",
+        icon: "📁",
+        color: "#94a3b8",
+      });
     }
 
     // Add to group (new approach)
@@ -91,10 +91,7 @@ export async function POST(request: Request) {
     }
 
     console.error("Error adding employee:", error);
-    return Response.json(
-      { error: "Failed to add employee" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Failed to add employee" }, { status: 500 });
   }
 }
 

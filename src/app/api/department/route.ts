@@ -1,29 +1,26 @@
-import { agentGroupRepository } from "lib/db/repository";
+import { departmentRepository } from "lib/db/repository";
 import { getSession } from "auth/server";
 import { z } from "zod";
 import { serverCache } from "lib/cache";
 import { CacheKeys } from "lib/cache/cache-keys";
 
-// Schema for agent group operations
-export const AgentGroupCreateSchema = z.object({
+// Schema for department operations
+export const DepartmentCreateSchema = z.object({
   name: z.string().min(1).max(100),
-  departmentId: z.string().uuid().nullable().optional(),
-  color: z.string().optional().default("#94a3b8"),
-  icon: z.string().optional().default("📁"),
+  color: z.string().optional().default("#3b82f6"),
+  icon: z.string().optional().default("🏢"),
   sortOrder: z.number().optional().default(0),
-  type: z.enum(["system", "custom"]).optional().default("custom"),
 });
 
-export const AgentGroupUpdateSchema = z.object({
+export const DepartmentUpdateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
-  departmentId: z.string().uuid().nullable().optional(),
   color: z.string().optional(),
   icon: z.string().optional(),
   sortOrder: z.number().optional(),
 });
 
-// GET /api/agent-groups - 获取小组列表
-export async function GET(request: Request) {
+// GET /api/department - 获取用户部门列表（含小组数量）
+export async function GET(_request: Request) {
   const session = await getSession();
 
   if (!session?.user.id) {
@@ -31,27 +28,18 @@ export async function GET(request: Request) {
   }
 
   try {
-    const url = new URL(request.url);
-    const departmentId = url.searchParams.get("departmentId");
+    const departments = await departmentRepository.findWithGroups(
+      session.user.id,
+    );
 
-    let groups;
-
-    if (departmentId) {
-      // 获取特定部门下的小组
-      groups = await agentGroupRepository.getGroupsByDepartment(departmentId);
-    } else {
-      // 获取用户所有小组
-      groups = await agentGroupRepository.getUserGroups(session.user.id);
-    }
-
-    return Response.json(groups);
+    return Response.json(departments);
   } catch (error) {
-    console.error("Failed to fetch agent groups:", error);
+    console.error("Failed to fetch departments:", error);
     return new Response("Internal Server Error", { status: 500 });
   }
 }
 
-// POST /api/agent-groups - 创建小组
+// POST /api/department - 创建部门
 export async function POST(request: Request): Promise<Response> {
   const session = await getSession();
 
@@ -61,14 +49,14 @@ export async function POST(request: Request): Promise<Response> {
 
   try {
     const body = await request.json();
-    const data = AgentGroupCreateSchema.parse(body);
+    const data = DepartmentCreateSchema.parse(body);
 
-    const group = await agentGroupRepository.createGroup(session.user.id, data);
+    const department = await departmentRepository.create(session.user.id, data);
 
     // Clear cache
     serverCache.delete(CacheKeys.userDepartments(session.user.id));
 
-    return Response.json(group);
+    return Response.json(department);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return Response.json(
@@ -77,12 +65,12 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    console.error("Failed to create agent group:", error);
+    console.error("Failed to create department:", error);
     return new Response("Internal Server Error", { status: 500 });
   }
 }
 
-// PUT /api/agent-groups - 更新小组
+// PUT /api/department - 更新部门
 export async function PUT(request: Request): Promise<Response> {
   const session = await getSession();
 
@@ -93,16 +81,16 @@ export async function PUT(request: Request): Promise<Response> {
   try {
     const body = await request.json();
     const { id, ...updateData } = body;
-    const data = AgentGroupUpdateSchema.parse(updateData);
+    const data = DepartmentUpdateSchema.parse(updateData);
 
     if (!id) {
       return Response.json(
-        { error: "Agent group ID is required" },
+        { error: "Department ID is required" },
         { status: 400 },
       );
     }
 
-    const group = await agentGroupRepository.updateGroup(
+    const department = await departmentRepository.update(
       id,
       session.user.id,
       data,
@@ -111,7 +99,7 @@ export async function PUT(request: Request): Promise<Response> {
     // Clear cache
     serverCache.delete(CacheKeys.userDepartments(session.user.id));
 
-    return Response.json(group);
+    return Response.json(department);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return Response.json(
@@ -120,12 +108,12 @@ export async function PUT(request: Request): Promise<Response> {
       );
     }
 
-    console.error("Failed to update agent group:", error);
+    console.error("Failed to update department:", error);
     return new Response("Internal Server Error", { status: 500 });
   }
 }
 
-// DELETE /api/agent-groups - 删除小组
+// DELETE /api/department - 删除部门
 export async function DELETE(request: Request): Promise<Response> {
   const session = await getSession();
 
@@ -135,23 +123,23 @@ export async function DELETE(request: Request): Promise<Response> {
 
   try {
     const url = new URL(request.url);
-    const groupId = url.searchParams.get("id");
+    const departmentId = url.searchParams.get("id");
 
-    if (!groupId) {
+    if (!departmentId) {
       return Response.json(
-        { error: "Agent group ID is required" },
+        { error: "Department ID is required" },
         { status: 400 },
       );
     }
 
-    await agentGroupRepository.deleteGroup(groupId, session.user.id);
+    await departmentRepository.delete(departmentId, session.user.id);
 
     // Clear cache
     serverCache.delete(CacheKeys.userDepartments(session.user.id));
 
     return Response.json({ success: true });
   } catch (error) {
-    console.error("Failed to delete agent group:", error);
+    console.error("Failed to delete department:", error);
     return new Response("Internal Server Error", { status: 500 });
   }
 }

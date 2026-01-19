@@ -1,7 +1,12 @@
 import { Agent, AgentRepository, AgentSummary } from "app-types/agent";
 import { pgAgentGroupRepository } from "./agent-group-repository.pg";
 import { pgDb as db } from "../db.pg";
-import { AgentTable, BookmarkTable, UserTable, UserEmployeeTable } from "../schema.pg";
+import {
+  AgentTable,
+  BookmarkTable,
+  UserTable,
+  UserEmployeeTable,
+} from "../schema.pg";
 import { AgentGroupMemberTable } from "../schema.pg";
 import { and, desc, eq, ne, or, sql } from "drizzle-orm";
 import { generateUUID } from "lib/utils";
@@ -276,7 +281,10 @@ export const pgAgentRepository: AgentRepository = {
     currentUserId: string,
     groupName: string,
   ): Promise<AgentSummary[]> {
-    const group = await pgAgentGroupRepository.getGroupByName(currentUserId, groupName);
+    const group = await pgAgentGroupRepository.getGroupByName(
+      currentUserId,
+      groupName,
+    );
     if (!group) {
       return [];
     }
@@ -342,5 +350,105 @@ export const pgAgentRepository: AgentRepository = {
       .update(AgentTable)
       .set({ copyCount: sql`copy_count + 1` })
       .where(eq(AgentTable.id, agentId));
+  },
+
+  async selectAgentsByGroupId(
+    currentUserId: string,
+    groupId: string,
+  ): Promise<AgentSummary[]> {
+    const results = await db
+      .select({
+        id: AgentTable.id,
+        name: AgentTable.name,
+        description: AgentTable.description,
+        icon: AgentTable.icon,
+        userId: AgentTable.userId,
+        visibility: AgentTable.visibility,
+        createdAt: AgentTable.createdAt,
+        updatedAt: AgentTable.updatedAt,
+        userName: UserTable.name,
+        userAvatar: UserTable.image,
+        isBookmarked: sql<boolean>`CASE WHEN ${BookmarkTable.id} IS NOT NULL THEN true ELSE false END`,
+      })
+      .from(AgentTable)
+      .innerJoin(UserTable, eq(AgentTable.userId, UserTable.id))
+      .leftJoin(
+        BookmarkTable,
+        and(
+          eq(BookmarkTable.itemId, AgentTable.id),
+          eq(BookmarkTable.itemType, "agent"),
+          eq(BookmarkTable.userId, currentUserId),
+        ),
+      )
+      .where(eq(AgentTable.groupId, groupId))
+      .orderBy(desc(AgentTable.updatedAt));
+
+    // Map database nulls to undefined
+    return results.map((result: any) => ({
+      ...result,
+      description: result.description ?? undefined,
+      icon: result.icon ?? undefined,
+      userName: result.userName ?? undefined,
+      userAvatar: result.userAvatar ?? undefined,
+    }));
+  },
+
+  async selectAgentsByDepartmentId(
+    currentUserId: string,
+    departmentId: string,
+  ): Promise<AgentSummary[]> {
+    // Get all groups in the department
+    const { AgentGroupTable } = await import("../schema.pg");
+    const groups = await db
+      .select({ id: AgentGroupTable.id })
+      .from(AgentGroupTable)
+      .where(eq(AgentGroupTable.departmentId, departmentId));
+
+    if (groups.length === 0) {
+      return [];
+    }
+
+    const groupIds = groups.map((g) => g.id);
+
+    // Build OR conditions for each group ID
+    const groupConditions = groupIds.map((groupId) =>
+      eq(AgentTable.groupId, groupId),
+    );
+
+    const results = await db
+      .select({
+        id: AgentTable.id,
+        name: AgentTable.name,
+        description: AgentTable.description,
+        icon: AgentTable.icon,
+        userId: AgentTable.userId,
+        visibility: AgentTable.visibility,
+        createdAt: AgentTable.createdAt,
+        updatedAt: AgentTable.updatedAt,
+        userName: UserTable.name,
+        userAvatar: UserTable.image,
+        isBookmarked: sql<boolean>`CASE WHEN ${BookmarkTable.id} IS NOT NULL THEN true ELSE false END`,
+      })
+      .from(AgentTable)
+      .innerJoin(UserTable, eq(AgentTable.userId, UserTable.id))
+      .leftJoin(
+        BookmarkTable,
+        and(
+          eq(BookmarkTable.itemId, AgentTable.id),
+          eq(BookmarkTable.itemType, "agent"),
+          eq(BookmarkTable.userId, currentUserId),
+        ),
+      )
+      .where(or(...groupConditions))
+      .orderBy(desc(AgentTable.updatedAt));
+
+    // Map database nulls to undefined
+    return results.map((result: any) => ({
+      ...result,
+      description: result.description ?? undefined,
+      icon: result.icon ?? undefined,
+      userName: result.userName ?? undefined,
+      userAvatar: result.userAvatar ?? undefined,
+    }));
   },
 };

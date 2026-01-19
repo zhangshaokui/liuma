@@ -26,8 +26,8 @@ interface AgentsListProps {
 }
 
 export function AgentsList({
-  userId,
-  userRole,
+  userId: _userId,
+  userRole: _userRole,
 }: AgentsListProps) {
   const t = useTranslations();
   const mutateAgents = useMutateAgents();
@@ -35,7 +35,10 @@ export function AgentsList({
     string | null
   >(null);
   const [isAddToStoreDialogOpen, setIsAddToStoreDialogOpen] = useState(false);
-  const [selectedAgentForStore, setSelectedAgentForStore] = useState<{id: string, name: string} | null>(null);
+  const [selectedAgentForStore, setSelectedAgentForStore] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [visibilityChangeLoading, setVisibilityChangeLoading] = useState<
     string | null
@@ -44,13 +47,27 @@ export function AgentsList({
   const { data: allAgents, isLoading } = useSWR<AgentSummary[]>(
     `/api/agent?filters=mine&key=${refreshKey}`,
     fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 2000,
+    },
   );
 
   const myAgents: AgentSummary[] = allAgents || [];
 
-  // Don't render anything while loading to avoid flash
+  // Show loading state instead of null
   if (isLoading && !allAgents) {
-    return null;
+    return (
+      <div className="w-full flex flex-col gap-4 p-8">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">{t("Layout.agents")}</h1>
+        </div>
+        <div className="flex items-center justify-center py-20">
+          <div className="text-muted-foreground">加载中...</div>
+        </div>
+      </div>
+    );
   }
 
   const updateVisibility = async (agentId: string, visibility: Visibility) => {
@@ -99,7 +116,7 @@ export function AgentsList({
 
   // Check if user can create agents using Better Auth permissions
   const canCreate = canCreateAgent(userRole);
-  const isAdmin = userRole === 'admin';
+  const isAdmin = userRole === "admin";
 
   return (
     <div className="w-full flex flex-col gap-4 p-8">
@@ -164,7 +181,10 @@ export function AgentsList({
                 onAddToStore={
                   isAdmin && !agent.isTemplate
                     ? () => {
-                        setSelectedAgentForStore({ id: agent.id, name: agent.name });
+                        setSelectedAgentForStore({
+                          id: agent.id,
+                          name: agent.name,
+                        });
                         setIsAddToStoreDialogOpen(true);
                       }
                     : undefined
@@ -184,7 +204,7 @@ export function AgentsList({
           onAdded={() => {
             setIsAddToStoreDialogOpen(false);
             setSelectedAgentForStore(null);
-            setRefreshKey(prev => prev + 1);
+            setRefreshKey((prev) => prev + 1);
           }}
         />
       )}

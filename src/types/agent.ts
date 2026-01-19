@@ -2,7 +2,6 @@ import z from "zod";
 import { ChatMentionSchema } from "./chat";
 import { VisibilitySchema } from "./util";
 
-
 export type AgentCategory = {
   id: string;
   name: string;
@@ -40,6 +39,8 @@ export const AgentCreateSchema = z
     // Agent Store 模板字段
     isTemplate: z.boolean().optional().default(false),
     categoryId: z.string().uuid().nullable().optional(),
+    // Agent Group Management
+    groupId: z.string().uuid().nullable().optional(),
   })
   .strip();
 
@@ -59,13 +60,15 @@ export const AgentUpdateSchema = z
     // Agent Store 模板字段
     isTemplate: z.boolean().optional(),
     categoryId: z.string().uuid().nullable().optional(),
+    // Agent Group Management
+    groupId: z.string().uuid().nullable().optional(),
   })
   .strip();
 
 export const AgentQuerySchema = z.object({
   type: z.enum(["all", "mine", "shared", "bookmarked"]).default("all"),
   filters: z.string().optional(),
-  group: z.string().optional(),  // Group name filter
+  group: z.string().optional(), // Group name filter
   limit: z.coerce.number().min(1).max(100).default(50),
 });
 
@@ -86,6 +89,7 @@ export type AgentSummary = {
   isEmployee?: boolean;
   isTemplate?: boolean;
   categoryId?: string | null;
+  groupId?: string | null; // Agent Group Management
   copyCount?: number;
   coverEmoji?: string | null;
 };
@@ -121,7 +125,20 @@ export type AgentRepository = {
     destructive?: boolean,
   ): Promise<boolean>;
 
-  selectAgentsByGroup(currentUserId: string, groupName: string): Promise<AgentSummary[]>;
+  selectAgentsByGroup(
+    currentUserId: string,
+    groupName: string,
+  ): Promise<AgentSummary[]>;
+
+  selectAgentsByGroupId(
+    currentUserId: string,
+    groupId: string,
+  ): Promise<AgentSummary[]>;
+
+  selectAgentsByDepartmentId(
+    currentUserId: string,
+    departmentId: string,
+  ): Promise<AgentSummary[]>;
 
   // Agent Store 相关方法
   getAgentById(agentId: string): Promise<AgentSummary | null>;

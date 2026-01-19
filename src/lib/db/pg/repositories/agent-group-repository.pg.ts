@@ -1,45 +1,122 @@
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, asc, ne, sql } from "drizzle-orm";
 import { pgDb as db } from "../db.pg";
-import { AgentGroupTable, AgentGroupMemberTable, AgentTable } from "../schema.pg";
+import {
+  AgentGroupTable,
+  AgentGroupMemberTable,
+  AgentTable,
+} from "../schema.pg";
 import { generateUUID } from "lib/utils";
+
+export interface AgentGroup {
+  id: string;
+  userId: string;
+  departmentId: string | null;
+  name: string;
+  color: string;
+  icon: string;
+  sortOrder: number;
+  type: "system" | "custom";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AgentGroupWithAgents extends AgentGroup {
+  agentCount: number;
+}
 
 export interface AgentGroupRepository {
   // 组管理
-  createGroup(userId: string, name: string, type: "system" | "custom"): Promise<{id: string, name: string, type: string}>;
-  getUserGroups(userId: string): Promise<Array<{id: string, name: string, type: string}>>;
+  createGroup(
+    userId: string,
+    data: {
+      name: string;
+      departmentId?: string | null;
+      color?: string;
+      icon?: string;
+      sortOrder?: number;
+      type?: "system" | "custom";
+    },
+  ): Promise<AgentGroup>;
+
+  updateGroup(
+    groupId: string,
+    userId: string,
+    data: {
+      name?: string;
+      departmentId?: string | null;
+      color?: string;
+      icon?: string;
+      sortOrder?: number;
+    },
+  ): Promise<AgentGroup>;
+
+  getUserGroups(userId: string): Promise<AgentGroup[]>;
+  getGroupsByDepartment(departmentId: string): Promise<AgentGroup[]>;
+
   deleteGroup(groupId: string, userId: string): Promise<void>;
-  getGroupByName(userId: string, name: string): Promise<{id: string, name: string, type: string} | null>;
-  
-  // 成员管理
+
+  getGroupByName(userId: string, name: string): Promise<AgentGroup | null>;
+  getGroupById(groupId: string): Promise<AgentGroup | null>;
+
+  // 成员管理（保留旧的成员管理方法用于向后兼容）
   addMember(groupId: string, agentId: string): Promise<void>;
   removeMember(groupId: string, agentId: string): Promise<void>;
   getGroupAgents(groupId: string): Promise<Array<any>>;
   isAgentInGroup(groupId: string, agentId: string): Promise<boolean>;
-  
+
   // 使用记录
   updateLastUsed(groupId: string, agentId: string): Promise<void>;
-  
+
   // 系统组初始化
   initializeSystemGroups(userId: string): Promise<void>;
+
+  // 更新时间戳
+  updateTimestamp(groupId: string): Promise<void>;
 }
 
 export const pgAgentGroupRepository: AgentGroupRepository = {
-  async createGroup(userId, name, type) {
+  async createGroup(userId, data) {
     const [result] = await db
       .insert(AgentGroupTable)
       .values({
         id: generateUUID(),
         userId,
-        name,
-        type,
+        name: data.name,
+        departmentId: data.departmentId ?? null,
+        color: data.color || "#94a3b8",
+        icon: data.icon || "📁",
+        sortOrder: data.sortOrder || 0,
+        type: data.type || "custom",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })
       .returning();
-    
-    return {
-      id: result.id,
-      name: result.name,
-      type: result.type,
-    };
+
+    return result;
+  },
+
+  async updateGroup(groupId, userId, data) {
+    const [result] = await db
+      .update(AgentGroupTable)
+      .set({
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.departmentId !== undefined && {
+          departmentId: data.departmentId,
+        }),
+        ...(data.color !== undefined && { color: data.color }),
+        ...(data.icon !== undefined && { icon: data.icon }),
+        ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(AgentGroupTable.id, groupId),
+          eq(AgentGroupTable.userId, userId),
+        ),
+      )
+      .returning();
+
+    return result;
   },
 
   async getUserGroups(userId) {
@@ -47,25 +124,30 @@ export const pgAgentGroupRepository: AgentGroupRepository = {
       .select()
       .from(AgentGroupTable)
       .where(eq(AgentGroupTable.userId, userId))
-      .orderBy(desc(AgentGroupTable.createdAt));
+      .orderBy(asc(AgentGroupTable.sortOrder), desc(AgentGroupTable.createdAt));
 
-    return groups.map(g => ({
-      id: g.id,
-      name: g.name,
-      type: g.type,
-    }));
+    return groups;
+  },
+
+  async getGroupsByDepartment(departmentId) {
+    const groups = await db
+      .select()
+      .from(AgentGroupTable)
+      .where(eq(AgentGroupTable.departmentId, departmentId))
+      .orderBy(asc(AgentGroupTable.sortOrder), desc(AgentGroupTable.createdAt));
+
+    return groups;
   },
 
   async deleteGroup(groupId, userId) {
-    await db
-      .delete(AgentGroupTable)
-      .where(
-        and(
-          eq(AgentGroupTable.id, groupId),
-          eq(AgentGroupTable.userId, userId),
-          eq(AgentGroupTable.type, "custom"), // 只能删除自定义组
-        ),
-      );
+    await db.delete(AgentGroupTable).where(
+      and(
+        eq(AgentGroupTable.id, groupId),
+        eq(AgentGroupTable.userId, userId),
+        eq(AgentGroupTable.type, "custom"), // 只能删除自定义组
+        ne(AgentGroupTable.name, "未分组"), // 不允许删除默认的"未分组"组
+      ),
+    );
   },
 
   async getGroupByName(userId, name) {
@@ -73,14 +155,21 @@ export const pgAgentGroupRepository: AgentGroupRepository = {
       .select()
       .from(AgentGroupTable)
       .where(
-        and(
-          eq(AgentGroupTable.userId, userId),
-          eq(AgentGroupTable.name, name),
-        ),
+        and(eq(AgentGroupTable.userId, userId), eq(AgentGroupTable.name, name)),
       )
       .limit(1);
 
-    return group ? { id: group.id, name: group.name, type: group.type } : null;
+    return group || null;
+  },
+
+  async getGroupById(groupId) {
+    const [group] = await db
+      .select()
+      .from(AgentGroupTable)
+      .where(eq(AgentGroupTable.id, groupId))
+      .limit(1);
+
+    return group || null;
   },
 
   async addMember(groupId, agentId) {
@@ -153,14 +242,24 @@ export const pgAgentGroupRepository: AgentGroupRepository = {
       );
   },
 
+  async updateTimestamp(groupId) {
+    await db
+      .update(AgentGroupTable)
+      .set({ updatedAt: new Date() })
+      .where(eq(AgentGroupTable.id, groupId));
+  },
+
   async initializeSystemGroups(userId) {
     // 检查是否已存在
     const existingGroups = await this.getUserGroups(userId);
-    const groupNames = existingGroups.map(g => g.name);
+    const groupNames = existingGroups.map((g) => g.name);
 
-    // 创建我的AI员工组
+    // 创建我的AI员工组（向后兼容）
     if (!groupNames.includes("我的AI员工")) {
-      await this.createGroup(userId, "我的AI员工", "system");
+      await this.createGroup(userId, {
+        name: "我的AI员工",
+        type: "system",
+      });
     }
   },
 };

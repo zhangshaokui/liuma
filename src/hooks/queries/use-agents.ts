@@ -80,6 +80,49 @@ export function useAgents(options: UseAgentsOptions = {}) {
   };
 }
 
+// New hook for agents filtered by group
+interface UseAgentsByGroupOptions extends SWRConfiguration {
+  groupId?: string | null;
+  departmentId?: string | null;
+  limit?: number;
+}
+
+export function useAgentsByGroup(options: UseAgentsByGroupOptions = {}) {
+  const { groupId, departmentId, limit = 100, ...swrOptions } = options;
+
+  // Build query string for filtering by group
+  const queryParams = new URLSearchParams();
+  if (groupId) queryParams.set("groupId", groupId);
+  if (departmentId) queryParams.set("departmentId", departmentId);
+  if (limit) queryParams.set("limit", limit.toString());
+
+  const queryString = queryParams.toString();
+
+  const {
+    data: agents = [],
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<AgentSummary[]>(
+    queryString ? `/api/agent?${queryString}` : null,
+    fetcher,
+    {
+      errorRetryCount: 0,
+      revalidateOnFocus: false,
+      fallbackData: [],
+      onError: handleErrorWithToast,
+      ...swrOptions,
+    },
+  );
+
+  return {
+    agents,
+    isLoading,
+    error,
+    mutate,
+  };
+}
+
 // Utility hook to invalidate all agent caches
 export function useMutateAgents() {
   const { mutate } = useSWRConfig();

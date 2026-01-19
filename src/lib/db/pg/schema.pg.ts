@@ -57,7 +57,12 @@ export const AgentTable = pgTable("agent", {
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   isTemplate: boolean("is_template").notNull().default(false),
-  categoryId: uuid("category_id").references(() => AgentCategoryTable.id, { onDelete: "set null" }),
+  categoryId: uuid("category_id").references(() => AgentCategoryTable.id, {
+    onDelete: "set null",
+  }),
+  groupId: uuid("group_id").references(() => AgentGroupTable.id, {
+    onDelete: "set null",
+  }),
   copyCount: integer("copy_count").notNull().default(0),
   coverEmoji: text("cover_emoji"),
 });
@@ -69,8 +74,6 @@ export const AgentCategoryTable = pgTable("agent_category", {
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
-
-
 
 export const BookmarkTable = pgTable(
   "bookmark",
@@ -414,6 +417,32 @@ export const UserEmployeeTable = pgTable(
 
 export type UserEmployeeEntity = typeof UserEmployeeTable.$inferSelect;
 
+// Department - 部门表（AI员工组织的顶层结构）
+export const DepartmentTable = pgTable(
+  "department",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    color: text("color").notNull().default("#3b82f6"),
+    icon: text("icon").notNull().default("🏢"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    unique().on(table.userId, table.name),
+    index("department_user_id_idx").on(table.userId),
+    index("department_sort_order_idx").on(table.sortOrder),
+  ],
+);
+
 // Agent Groups - 用户私有组（如我的AI员工、常用智能体）
 export const AgentGroupTable = pgTable(
   "agent_group",
@@ -422,11 +451,20 @@ export const AgentGroupTable = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => UserTable.id, { onDelete: "cascade" }),
-    name: text("name").notNull().unique(),
+    departmentId: uuid("department_id").references(() => DepartmentTable.id, {
+      onDelete: "set null",
+    }),
+    name: text("name").notNull(),
+    color: text("color").notNull().default("#94a3b8"),
+    icon: text("icon").notNull().default("📁"),
+    sortOrder: integer("sort_order").notNull().default(0),
     type: varchar("type", { enum: ["system", "custom"] })
       .notNull()
       .default("custom"),
     createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),
   },
@@ -434,6 +472,7 @@ export const AgentGroupTable = pgTable(
     unique().on(table.userId, table.name),
     index("agent_group_user_id_idx").on(table.userId),
     index("agent_group_type_idx").on(table.type),
+    index("agent_group_department_id_idx").on(table.departmentId),
   ],
 );
 
@@ -465,3 +504,4 @@ export const AgentGroupMemberTable = pgTable(
 
 export type AgentGroupEntity = typeof AgentGroupTable.$inferSelect;
 export type AgentGroupMemberEntity = typeof AgentGroupMemberTable.$inferSelect;
+export type DepartmentEntity = typeof DepartmentTable.$inferSelect;

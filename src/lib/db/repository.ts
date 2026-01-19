@@ -12,6 +12,7 @@ import { pgChatExportRepository } from "./pg/repositories/chat-export-repository
 import { pgEmployeeRepository } from "./pg/repositories/employee-repository.pg";
 import { pgAgentGroupRepository } from "./pg/repositories/agent-group-repository.pg";
 import { pgAgentCategoryRepository } from "./pg/repositories/agent-category-repository.pg";
+import { pgDepartmentRepository } from "./pg/repositories/department-repository.pg";
 
 export const chatRepository = pgChatRepository;
 export const userRepository = pgUserRepository;
@@ -31,3 +32,4 @@ export const employeeRepository = pgEmployeeRepository;
 export const agentCategoryRepository = pgAgentCategoryRepository;
 
 export const agentGroupRepository = pgAgentGroupRepository;
+export const departmentRepository = pgDepartmentRepository;

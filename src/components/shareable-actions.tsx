@@ -11,6 +11,7 @@ import {
   UserPlus,
   UserMinus,
   Store,
+  Move,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -91,6 +92,7 @@ interface ShareableActionsProps {
   disabled?: boolean;
   hideVisibilityAndBookmark?: boolean;
   onAddToStore?: () => void;
+  onMove?: () => void;
 }
 
 export function ShareableActions({
@@ -113,6 +115,7 @@ export function ShareableActions({
   disabled = false,
   hideVisibilityAndBookmark = false,
   onAddToStore,
+  onMove,
 }: ShareableActionsProps) {
   const t = useTranslations();
   const router = useRouter();
@@ -300,23 +303,50 @@ export function ShareableActions({
       {isOwner && renderActions && renderActions()}
 
       {isOwner && onDelete && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 text-muted-foreground hover:text-destructive"
-          disabled={isAnyLoading || disabled}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onDelete();
-          }}
-        >
-          {isDeleteLoading ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Trash2 className="size-4" />
-          )}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground hover:text-destructive"
+              disabled={isAnyLoading || disabled}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.nativeEvent.stopImmediatePropagation();
+                onDelete();
+              }}
+            >
+              {isDeleteLoading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Trash2 className="size-4" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t("Common.delete")}</TooltipContent>
+        </Tooltip>
+      )}
+
+      {isOwner && onMove && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground hover:text-foreground"
+              disabled={isAnyLoading || disabled}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onMove();
+              }}
+            >
+              <Move className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>移动到部门/小组</TooltipContent>
+        </Tooltip>
       )}
 
       {isOwner && onAddToStore && (

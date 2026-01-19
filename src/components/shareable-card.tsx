@@ -46,7 +46,12 @@ interface ShareableCardProps {
   isEmployeeToggleLoading?: boolean;
   hideVisibilityAndBookmark?: boolean;
   onAddToStore?: () => void;
-  AddToStoreDialog?: ComponentType<{ agentId: string; agentName: string; onAdded?: () => void }>;
+  onMove?: () => void;
+  AddToStoreDialog?: ComponentType<{
+    agentId: string;
+    agentName: string;
+    onAdded?: () => void;
+  }>;
   extraContent?: ReactNode;
 }
 
@@ -68,7 +73,8 @@ export function ShareableCard({
   isEmployeeToggleLoading = false,
   hideVisibilityAndBookmark = false,
   onAddToStore,
-  AddToStoreDialog,
+  onMove,
+  AddToStoreDialog: _AddToStoreDialog,
   extraContent,
 }: ShareableCardProps) {
   const t = useTranslations();
@@ -79,7 +85,7 @@ export function ShareableCard({
 
   // Format date based on locale
   const formatDate = (date: Date | string) => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const dateObj = typeof date === "string" ? new Date(date) : date;
     if (locale === "zh") {
       return format(dateObj, "yyyy.MM.dd");
     } else {
@@ -171,7 +177,8 @@ export function ShareableCard({
                   }
                   onBookmarkToggle={
                     onBookmarkToggle
-                      ? (isBookmarked) => onBookmarkToggle(item.id, isBookmarked)
+                      ? (isBookmarked) =>
+                          onBookmarkToggle(item.id, isBookmarked)
                       : undefined
                   }
                   onDelete={onDelete ? () => onDelete(item.id) : undefined}
@@ -188,6 +195,7 @@ export function ShareableCard({
                   isEmployeeToggleLoading={isEmployeeToggleLoading}
                   hideVisibilityAndBookmark={hideVisibilityAndBookmark}
                   onAddToStore={onAddToStore}
+                  onMove={onMove}
                 />
               </div>
             </div>
