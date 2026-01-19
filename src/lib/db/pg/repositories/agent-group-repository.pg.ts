@@ -140,14 +140,37 @@ export const pgAgentGroupRepository: AgentGroupRepository = {
   },
 
   async deleteGroup(groupId, userId) {
-    await db.delete(AgentGroupTable).where(
-      and(
-        eq(AgentGroupTable.id, groupId),
-        eq(AgentGroupTable.userId, userId),
-        eq(AgentGroupTable.type, "custom"), // 只能删除自定义组
-        ne(AgentGroupTable.name, "未分组"), // 不允许删除默认的"未分组"组
-      ),
-    );
+    const result = await db
+      .delete(AgentGroupTable)
+      .where(
+        and(
+          eq(AgentGroupTable.id, groupId),
+          eq(AgentGroupTable.userId, userId),
+          eq(AgentGroupTable.type, "custom"), // 只能删除自定义组
+          ne(AgentGroupTable.name, "未分组"), // 不允许删除默认的"未分组"组
+        ),
+      )
+      .returning();
+
+    // 检查是否真的删除了行
+    if (result.length === 0) {
+      // 先检查小组是否存在，以提供更准确的错误信息
+      const group = await this.getGroupById(groupId);
+      if (!group) {
+        throw new Error("小组不存在");
+      }
+      if (group.type !== "custom") {
+        throw new Error("系统组不能删除");
+      }
+      if (group.name === "未分组") {
+        throw new Error("未分组小组不能删除");
+      }
+      if (group.userId !== userId) {
+        throw new Error("无权限删除此小组");
+      }
+      // 如果以上检查都通过但没删除，可能是其他原因
+      throw new Error("删除失败：无法删除该小组");
+    }
   },
 
   async getGroupByName(userId, name) {

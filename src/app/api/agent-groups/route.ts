@@ -144,6 +144,27 @@ export async function DELETE(request: Request): Promise<Response> {
       );
     }
 
+    // 检查小组是否存在
+    const group = await agentGroupRepository.getGroupById(groupId);
+    if (!group) {
+      return Response.json({ error: "小组不存在" }, { status: 404 });
+    }
+
+    // 检查是否为系统组
+    if (group.type === "system") {
+      return Response.json({ error: "系统组不能删除" }, { status: 400 });
+    }
+
+    // 检查是否为未分组小组
+    if (group.name === "未分组") {
+      return Response.json({ error: "未分组小组不能删除" }, { status: 400 });
+    }
+
+    // 检查权限
+    if (group.userId !== session.user.id) {
+      return Response.json({ error: "无权限删除此小组" }, { status: 403 });
+    }
+
     await agentGroupRepository.deleteGroup(groupId, session.user.id);
 
     // Clear cache
@@ -152,6 +173,10 @@ export async function DELETE(request: Request): Promise<Response> {
     return Response.json({ success: true });
   } catch (error) {
     console.error("Failed to delete agent group:", error);
+    // 如果是已知的业务错误，返回具体的错误信息
+    if (error instanceof Error) {
+      return Response.json({ error: error.message }, { status: 400 });
+    }
     return new Response("Internal Server Error", { status: 500 });
   }
 }
