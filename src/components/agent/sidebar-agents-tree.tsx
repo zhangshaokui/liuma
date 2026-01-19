@@ -31,7 +31,6 @@ interface SidebarAgentsTreeProps {
 
 export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
   const mounted = useMounted();
-  const t = useTranslations();
   const router = useRouter();
   const { departments, isLoading } = useDepartments();
   const [expandedDepts, setExpandedDepts] = useState<string[]>([]);
@@ -51,11 +50,6 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
       }
     });
     return grouped;
-  }, [agents]);
-
-  // 计算总数（包括未分组的）
-  const totalAgentCount = useMemo(() => {
-    return agents?.length || 0;
   }, [agents]);
 
   // 计算每个部门的AI员工总数（使用dept.agentCount）
@@ -134,20 +128,6 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarMenu>
-          {/* 全部AI员工 */}
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={() => router.push("/agents")}
-              className="font-semibold"
-            >
-              <span className="text-lg">👥</span>
-              <span className="flex-1">{t("Layout.agents")}</span>
-              <span className="text-xs text-muted-foreground">
-                {totalAgentCount}
-              </span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
           {/* 部门列表 */}
           {departments?.map((dept) => {
             const isExpanded = expandedDepts.includes(dept.id);
@@ -157,19 +137,16 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
               <div key={dept.id}>
                 {/* 部门项 */}
                 <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={(_e) => {
-                      // 点击部门名称：折叠/展开
-                      toggleDepartment(dept.id);
-                    }}
-                    className="group/dept"
+                  <div
+                    onClick={() => toggleDepartment(dept.id)}
+                    className="group/dept flex items-center gap-1 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors w-full"
                   >
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleDepartment(dept.id);
                       }}
-                      className="flex-shrink-0 w-5 h-5 flex items-center justify-center hover:bg-accent rounded mr-1"
+                      className="flex-shrink-0 w-5 h-5 flex items-center justify-center hover:bg-accent rounded"
                     >
                       {isExpanded ? (
                         <ChevronDown className="w-4 h-4" />
@@ -207,7 +184,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                         <TooltipContent side="right">新建小组</TooltipContent>
                       </Tooltip>
                     )}
-                  </SidebarMenuButton>
+                  </div>
                 </SidebarMenuItem>
 
                 {/* 小组列表 */}
