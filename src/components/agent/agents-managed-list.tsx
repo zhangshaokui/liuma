@@ -52,6 +52,10 @@ export function AgentsManagedList({
     } else if (initialDeptId) {
       selectDepartment(initialDeptId);
       expandDepartment(initialDeptId);
+    } else {
+      // 如果没有dept和group参数，清空选择
+      selectDepartment(null);
+      selectGroup(null);
     }
 
     // 处理action参数（打开创建对话框）

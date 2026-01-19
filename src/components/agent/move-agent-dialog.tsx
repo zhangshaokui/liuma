@@ -91,6 +91,8 @@ export function MoveAgentDialog({
               onOpenChange(false);
               closeMoveAgentDialog();
               onSuccess?.();
+              // 刷新部门列表缓存（更新计数）
+              fetch("/api/department", { method: "GET" }).catch(() => {});
             } else {
               throw new Error("Failed to update groupId");
             }

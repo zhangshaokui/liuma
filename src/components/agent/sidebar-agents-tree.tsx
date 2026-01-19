@@ -129,143 +129,135 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
       <SidebarGroupContent>
         <SidebarMenu>
           {/* 部门列表 */}
-          {departments?.map((dept) => {
-            const isExpanded = expandedDepts.includes(dept.id);
-            const agentCount = departmentAgentCount[dept.id] || 0;
+          {departments
+            ?.filter((dept) => dept.name !== "待分配部门") // 过滤掉待分配部门
+            .map((dept) => {
+              const isExpanded = expandedDepts.includes(dept.id);
+              const agentCount = departmentAgentCount[dept.id] || 0;
 
-            return (
-              <div key={dept.id}>
-                {/* 部门项 */}
-                <SidebarMenuItem>
-                  <div
-                    onClick={() => toggleDepartment(dept.id)}
-                    className="group/dept flex items-center gap-1 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors w-full"
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleDepartment(dept.id);
-                      }}
-                      className="flex-shrink-0 w-5 h-5 flex items-center justify-center hover:bg-accent rounded"
-                    >
-                      {isExpanded ? (
-                        <ChevronDown className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
+              return (
+                <div key={dept.id}>
+                  {/* 部门项 */}
+                  <SidebarMenuItem>
+                    <div className="group/dept flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-accent transition-colors w-full">
+                      <button
+                        onClick={() => toggleDepartment(dept.id)}
+                        className="flex-shrink-0 w-5 h-5 flex items-center justify-center hover:bg-accent rounded"
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="w-4 h-4" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4" />
+                        )}
+                      </button>
+                      <span className="text-sm mr-1">{dept.icon}</span>
+                      <span
+                        className="flex-1 text-sm truncate cursor-pointer"
+                        onClick={() => handleDepartmentClick(dept.id)}
+                      >
+                        {dept.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {agentCount}
+                      </span>
+                      {canCreateAgent(userRole) && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push("/agents?action=createGroup");
+                              }}
+                              className="flex-shrink-0 w-5 h-5 flex items-center justify-center opacity-0 group-hover/dept:opacity-100 hover:bg-accent rounded transition-opacity"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">新建小组</TooltipContent>
+                        </Tooltip>
                       )}
-                    </button>
-                    <span className="text-sm mr-1">{dept.icon}</span>
-                    <span
-                      className="flex-1 text-sm truncate cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // 点击部门名称：跳转到/agents页面
-                        handleDepartmentClick(dept.id);
-                      }}
-                    >
-                      {dept.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {agentCount}
-                    </span>
-                    {canCreateAgent(userRole) && dept.name !== "待分配部门" && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push("/agents?action=createGroup");
-                            }}
-                            className="flex-shrink-0 w-5 h-5 flex items-center justify-center opacity-0 group-hover/dept:opacity-100 hover:bg-accent rounded transition-opacity"
-                          >
-                            <Plus className="w-3 h-3" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">新建小组</TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
-                </SidebarMenuItem>
+                    </div>
+                  </SidebarMenuItem>
 
-                {/* 小组列表 */}
-                {isExpanded && (
-                  <div className="ml-4">
-                    {dept.groups.map((group) => {
-                      const groupAgents = agentsByGroup[group.id] || [];
+                  {/* 小组列表 */}
+                  {isExpanded && (
+                    <div className="ml-4">
+                      {dept.groups.map((group) => {
+                        const groupAgents = agentsByGroup[group.id] || [];
 
-                      return (
-                        <SidebarMenuItem key={group.id}>
-                          <SidebarMenuButton
-                            onClick={() => handleGroupClick(group.id)}
-                            className="group/group"
-                          >
-                            <span className="w-5" /> {/* 缩进占位 */}
-                            <span className="text-sm mr-1">{group.icon}</span>
-                            <span className="flex-1 text-sm truncate">
-                              {group.name}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {groupAgents.length}
-                            </span>
-                          </SidebarMenuButton>
+                        return (
+                          <SidebarMenuItem key={group.id}>
+                            <SidebarMenuButton
+                              onClick={() => handleGroupClick(group.id)}
+                              className="group/group"
+                            >
+                              <span className="w-5" /> {/* 缩进占位 */}
+                              <span className="text-sm mr-1">{group.icon}</span>
+                              <span className="flex-1 text-sm truncate">
+                                {group.name}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {groupAgents.length}
+                              </span>
+                            </SidebarMenuButton>
 
-                          {/* 小组下的AI员工 */}
-                          {groupAgents.map((agent, idx) => (
-                            <SidebarMenuItem key={agent.id} className="ml-6">
-                              <SidebarMenuButton
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleAgentClick(agent);
-                                }}
-                                className="group/agent"
-                              >
-                                <div
-                                  className="p-0.5 rounded-full ring-2 ring-border bg-background mr-2 flex-shrink-0"
-                                  style={{
-                                    backgroundColor:
-                                      agent.icon?.style?.backgroundColor ||
-                                      BACKGROUND_COLORS[
-                                        idx % BACKGROUND_COLORS.length
-                                      ],
-                                  }}
-                                >
-                                  <Avatar className="size-3">
-                                    <AvatarImage
-                                      src={
-                                        agent.icon?.value ||
-                                        EMOJI_DATA[idx % EMOJI_DATA.length]
-                                      }
-                                    />
-                                    <AvatarFallback className="bg-transparent text-[8px]">
-                                      {agent.name[0]}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                </div>
-                                <span className="flex-1 text-xs truncate">
-                                  {agent.name}
-                                </span>
-                                <div
+                            {/* 小组下的AI员工 */}
+                            {groupAgents.map((agent, idx) => (
+                              <SidebarMenuItem key={agent.id} className="ml-6">
+                                <SidebarMenuButton
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    handleAgentClick(agent);
                                   }}
+                                  className="group/agent"
                                 >
-                                  <AgentDropdown agent={agent} side="right">
-                                    <button className="flex-shrink-0 w-5 h-5 flex items-center justify-center opacity-0 group-hover/agent:opacity-100 hover:bg-accent rounded transition-opacity">
-                                      <MoreHorizontal className="w-3 h-3" />
-                                    </button>
-                                  </AgentDropdown>
-                                </div>
-                              </SidebarMenuButton>
-                            </SidebarMenuItem>
-                          ))}
-                        </SidebarMenuItem>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                                  <div
+                                    className="p-0.5 rounded-full ring-2 ring-border bg-background mr-2 flex-shrink-0"
+                                    style={{
+                                      backgroundColor:
+                                        agent.icon?.style?.backgroundColor ||
+                                        BACKGROUND_COLORS[
+                                          idx % BACKGROUND_COLORS.length
+                                        ],
+                                    }}
+                                  >
+                                    <Avatar className="size-3">
+                                      <AvatarImage
+                                        src={
+                                          agent.icon?.value ||
+                                          EMOJI_DATA[idx % EMOJI_DATA.length]
+                                        }
+                                      />
+                                      <AvatarFallback className="bg-transparent text-[8px]">
+                                        {agent.name[0]}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  </div>
+                                  <span className="flex-1 text-xs truncate">
+                                    {agent.name}
+                                  </span>
+                                  <div
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                    }}
+                                  >
+                                    <AgentDropdown agent={agent} side="right">
+                                      <button className="flex-shrink-0 w-5 h-5 flex items-center justify-center opacity-0 group-hover/agent:opacity-100 hover:bg-accent rounded transition-opacity">
+                                        <MoreHorizontal className="w-3 h-3" />
+                                      </button>
+                                    </AgentDropdown>
+                                  </div>
+                                </SidebarMenuButton>
+                              </SidebarMenuItem>
+                            ))}
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
           {/* 新建部门按钮 */}
           {canCreateAgent(userRole) && (
