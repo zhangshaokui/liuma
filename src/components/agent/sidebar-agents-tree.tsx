@@ -39,7 +39,6 @@ import {
 } from "ui/dropdown-menu";
 import { AgentDropdown } from "./agent-dropdown";
 import { toast } from "sonner";
-import { safe } from "ts-safe";
 
 interface SidebarAgentsTreeProps {
   userRole?: string | null;
@@ -132,23 +131,28 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
   // 删除部门
   const handleDeleteDepartment = useCallback(
     async (deptId: string, deptName: string) => {
-      const ok = await (window as any).notify?.confirm({
-        title: "删除部门",
-        description: `确定要删除部门"${deptName}"吗？此操作不会删除部门下的AI员工，它们将被移至"待分配部门"。`,
-      });
+      // 使用浏览器原生 confirm 作为备用
+      const ok = window.confirm(
+        `确定要删除部门"${deptName}"吗？此操作不会删除部门下的AI员工，它们将被移至"待分配部门"。`,
+      );
       if (!ok) return;
 
-      safe(() => fetch(`/api/department/${deptId}`, { method: "DELETE" }))
-        .ifOk(async (res) => {
-          if (res.ok) {
-            toast.success("部门已删除");
-            // 刷新部门列表
-            mutate();
-          }
-        })
-        .ifFail(() => {
-          toast.error("删除失败");
+      try {
+        const res = await fetch(`/api/department/${deptId}`, {
+          method: "DELETE",
         });
+        if (res.ok) {
+          toast.success("部门已删除");
+          // 刷新部门列表
+          mutate();
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          toast.error(errorData.error || "删除失败");
+        }
+      } catch (error) {
+        console.error("Failed to delete department:", error);
+        toast.error("删除失败");
+      }
     },
     [mutate],
   );
@@ -156,27 +160,32 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
   // 删除小组
   const handleDeleteGroup = useCallback(
     async (groupId: string, groupName: string) => {
-      const ok = await (window as any).notify?.confirm({
-        title: "删除小组",
-        description: `确定要删除小组"${groupName}"吗？此操作不会删除小组下的AI员工，它们将被移至"未分组"。`,
-      });
+      // 使用浏览器原生 confirm 作为备用
+      const ok = window.confirm(
+        `确定要删除小组"${groupName}"吗？此操作不会删除小组下的AI员工，它们将被移至"未分组"。`,
+      );
       if (!ok) return;
 
-      safe(() => fetch(`/api/agent-groups/${groupId}`, { method: "DELETE" }))
-        .ifOk(async (res) => {
-          if (res.ok) {
-            toast.success("小组已删除");
-            // 如果删除的是当前选中的小组，清空选择
-            if (selectedGroup === groupId) {
-              selectGroup(null);
-            }
-            // 刷新部门列表
-            mutate();
-          }
-        })
-        .ifFail(() => {
-          toast.error("删除失败");
+      try {
+        const res = await fetch(`/api/agent-groups/${groupId}`, {
+          method: "DELETE",
         });
+        if (res.ok) {
+          toast.success("小组已删除");
+          // 如果删除的是当前选中的小组，清空选择
+          if (selectedGroup === groupId) {
+            selectGroup(null);
+          }
+          // 刷新部门列表
+          mutate();
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          toast.error(errorData.error || "删除失败");
+        }
+      } catch (error) {
+        console.error("Failed to delete group:", error);
+        toast.error("删除失败");
+      }
     },
     [mutate, selectedGroup, selectGroup],
   );
