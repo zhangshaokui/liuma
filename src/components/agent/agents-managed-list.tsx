@@ -1,30 +1,36 @@
 "use client";
 
-import { useRef } from "react";
-import { useTranslations } from "next-intl";
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from "ui/resizable";
-import { Button } from "ui/button";
-import { Plus } from "lucide-react";
 import { useAgentManagementStore } from "@/app/store/agent-management.store";
 import { useMutateAgents } from "@/hooks/queries/use-agents";
-import { DepartmentSidebar } from "./department-sidebar";
+import { Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useEffect, useRef } from "react";
+import { Button } from "ui/button";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "ui/resizable";
 import { AgentBoardView } from "./agent-board-view";
 import { CreateDepartmentDialog } from "./create-department-dialog";
 import { CreateGroupDialog } from "./create-group-dialog";
+import { DepartmentSidebar } from "./department-sidebar";
 import { MoveAgentDialog } from "./move-agent-dialog";
 
 interface AgentsManagedListProps {
   userId: string;
   userRole?: string | null;
+  initialDeptId?: string;
+  initialGroupId?: string;
+  action?: string;
 }
 
 export function AgentsManagedList({
   userId,
   userRole,
+  initialDeptId,
+  initialGroupId,
+  action,
 }: AgentsManagedListProps) {
   const t = useTranslations();
   const mutateAgents = useMutateAgents();
@@ -33,11 +39,43 @@ export function AgentsManagedList({
     isCreateGroupDialogOpen,
     isMoveAgentDialogOpen,
     openCreateDepartmentDialog,
+    openCreateGroupDialog,
     closeCreateDepartmentDialog,
     closeCreateGroupDialog,
     closeMoveAgentDialog,
     creatingGroupDepartmentId,
+    selectDepartment,
+    selectGroup,
+    expandDepartment,
   } = useAgentManagementStore();
+
+  // 根据URL参数自动选中部门/小组
+  useEffect(() => {
+    if (initialGroupId) {
+      selectGroup(initialGroupId);
+      // 如果有小组ID，展开所属部门
+      // 需要先获取部门数据来找到这个小组属于哪个部门
+    } else if (initialDeptId) {
+      selectDepartment(initialDeptId);
+      expandDepartment(initialDeptId);
+    }
+
+    // 处理action参数（打开创建对话框）
+    if (action === "createDepartment") {
+      openCreateDepartmentDialog();
+    } else if (action === "createGroup") {
+      openCreateGroupDialog();
+    }
+  }, [
+    initialDeptId,
+    initialGroupId,
+    action,
+    selectDepartment,
+    selectGroup,
+    expandDepartment,
+    openCreateDepartmentDialog,
+    openCreateGroupDialog,
+  ]);
 
   const handleRefresh = () => {
     mutateAgents();
