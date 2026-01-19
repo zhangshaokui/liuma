@@ -2,9 +2,9 @@
 
 import { useAgentManagementStore } from "@/app/store/agent-management.store";
 import { useAgentsByGroup } from "@/hooks/queries/use-agents";
+import { useDepartments } from "@/hooks/queries/use-departments";
 import { AgentGridBoard } from "./agent-grid-board";
 import { AgentSearchBar } from "./agent-search-bar";
-import { useDepartments } from "@/hooks/queries/use-departments";
 
 interface AgentBoardViewProps {
   userId: string;
@@ -17,7 +17,7 @@ export function AgentBoardView({
   onAgentsChange,
 }: AgentBoardViewProps) {
   const { departments } = useDepartments();
-  const { selectedDepartment, selectedGroup, searchQuery } =
+  const { selectedDepartment, selectedGroup, agentSearchQuery } =
     useAgentManagementStore();
 
   const { agents, isLoading, mutate } = useAgentsByGroup({
@@ -27,9 +27,9 @@ export function AgentBoardView({
 
   // 根据搜索查询过滤AI员工
   const filteredAgents = agents.filter((agent) => {
-    if (!searchQuery) return true;
+    if (!agentSearchQuery) return true;
 
-    const query = searchQuery.toLowerCase();
+    const query = agentSearchQuery.toLowerCase();
     return (
       agent.name?.toLowerCase().includes(query) ||
       agent.description?.toLowerCase().includes(query)

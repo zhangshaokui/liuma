@@ -42,7 +42,8 @@ export interface AgentManagementState {
   };
 
   // 搜索状态
-  searchQuery: string;
+  searchQuery: string; // 部门/小组搜索
+  agentSearchQuery: string; // AI员工搜索
 }
 
 // Agent Management Actions
@@ -97,6 +98,8 @@ export interface AgentManagementDispatch {
   // 搜索
   setSearchQuery: (query: string) => void;
   clearSearchQuery: () => void;
+  setAgentSearchQuery: (query: string) => void;
+  clearAgentSearchQuery: () => void;
 
   // 重置状态
   reset: () => void;
@@ -123,6 +126,7 @@ const initialState: AgentManagementState = {
     position: null,
   },
   searchQuery: "",
+  agentSearchQuery: "",
 };
 
 // Create store
@@ -241,6 +245,10 @@ export const useAgentManagementStore = create<
   setSearchQuery: (query) => set({ searchQuery: query }),
 
   clearSearchQuery: () => set({ searchQuery: "" }),
+
+  setAgentSearchQuery: (query) => set({ agentSearchQuery: query }),
+
+  clearAgentSearchQuery: () => set({ agentSearchQuery: "" }),
 
   // 重置状态
   reset: () => set(initialState),

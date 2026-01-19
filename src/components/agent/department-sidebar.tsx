@@ -46,6 +46,10 @@ export function DepartmentSidebar({}: DepartmentSidebarProps) {
 
   const isSelectedAll = !selectedDepartment && !selectedGroup;
 
+  // 计算总员工数
+  const totalAgentCount =
+    departments?.reduce((sum, dept) => sum + dept.agentCount, 0) || 0;
+
   // 过滤部门/小组
   const filteredDepartments = departments.filter((dept) => {
     if (!searchQuery) return true;
@@ -88,6 +92,9 @@ export function DepartmentSidebar({}: DepartmentSidebarProps) {
           >
             <span className="text-lg">👥</span>
             <span className="flex-1 text-sm font-medium">全部AI员工</span>
+            <span className="text-xs text-muted-foreground">
+              {totalAgentCount}
+            </span>
           </div>
 
           {isLoading ? (
