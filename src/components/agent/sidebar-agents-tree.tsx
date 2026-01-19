@@ -158,7 +158,10 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                 {/* 部门项 */}
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    onClick={() => handleDepartmentClick(dept.id)}
+                    onClick={(_e) => {
+                      // 点击部门名称：折叠/展开
+                      toggleDepartment(dept.id);
+                    }}
                     className="group/dept"
                   >
                     <button
@@ -175,7 +178,16 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                       )}
                     </button>
                     <span className="text-sm mr-1">{dept.icon}</span>
-                    <span className="flex-1 text-sm truncate">{dept.name}</span>
+                    <span
+                      className="flex-1 text-sm truncate cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // 点击部门名称：跳转到/agents页面
+                        handleDepartmentClick(dept.id);
+                      }}
+                    >
+                      {dept.name}
+                    </span>
                     <span className="text-xs text-muted-foreground">
                       {agentCount}
                     </span>

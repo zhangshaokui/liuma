@@ -1,7 +1,7 @@
-import { and, eq, desc, asc, ne, sql } from "drizzle-orm";
-import { pgDb as db } from "../db.pg";
-import { DepartmentTable, AgentGroupTable, AgentTable } from "../schema.pg";
+import { and, asc, desc, eq, ne, or, sql } from "drizzle-orm";
 import { generateUUID } from "lib/utils";
+import { pgDb as db } from "../db.pg";
+import { AgentGroupTable, AgentTable, DepartmentTable } from "../schema.pg";
 
 export interface Department {
   id: string;
@@ -159,16 +159,29 @@ export const pgDepartmentRepository: DepartmentRepository = {
       );
 
       // 计算部门的AI员工总数（包括所有小组）
-      const [departmentCountResult] = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(AgentTable)
-        .innerJoin(AgentGroupTable, eq(AgentTable.groupId, AgentGroupTable.id))
-        .where(eq(AgentGroupTable.departmentId, department.id));
+      // 先获取该部门下所有小组的ID
+      const groupIds = groups.map((g) => g.id);
+
+      let agentCount = 0;
+      if (groupIds.length > 0) {
+        // 统计这些小组中的AI员工数量
+        const [countResult] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(AgentTable)
+          .where(
+            and(
+              eq(AgentTable.userId, userId),
+              // 使用or条件匹配任意一个小组
+              or(...groupIds.map((groupId) => eq(AgentTable.groupId, groupId))),
+            ),
+          );
+        agentCount = Number(countResult?.count || 0);
+      }
 
       result.push({
         ...department,
         groups: groupsWithCounts,
-        agentCount: Number(departmentCountResult?.count || 0),
+        agentCount,
       });
     }
 
