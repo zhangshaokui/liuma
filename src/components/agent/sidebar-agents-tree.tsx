@@ -1,6 +1,7 @@
 "use client";
 
 import { appStore } from "@/app/store";
+import { useAgentManagementStore } from "@/app/store/agent-management.store";
 import { useAgents } from "@/hooks/queries/use-agents";
 import { useDepartments } from "@/hooks/queries/use-departments";
 import { useMounted } from "@/hooks/use-mounted";
@@ -9,7 +10,14 @@ import { canCreateAgent } from "lib/auth/client-permissions";
 import { BACKGROUND_COLORS, EMOJI_DATA } from "lib/const";
 import { cn } from "lib/utils";
 import { generateUUID } from "lib/utils";
-import { ChevronDown, ChevronRight, MoreHorizontal, Plus } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  MoreHorizontal,
+  Plus,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -23,7 +31,15 @@ import {
   SidebarMenuSkeleton,
 } from "ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "ui/dropdown-menu";
 import { AgentDropdown } from "./agent-dropdown";
+import { toast } from "sonner";
+import { safe } from "ts-safe";
 
 interface SidebarAgentsTreeProps {
   userRole?: string | null;
@@ -33,6 +49,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
   const mounted = useMounted();
   const router = useRouter();
   const { departments, isLoading } = useDepartments();
+  const { selectDepartment, selectGroup } = useAgentManagementStore();
   const [expandedDepts, setExpandedDepts] = useState<string[]>([]);
 
   // 获取所有AI员工（按部门/小组分组）
@@ -95,14 +112,70 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
 
   const _handleDepartmentClick = useCallback(
     (deptId: string) => {
+      // 设置选中的部门，清空小组选择
+      selectDepartment(deptId);
+      selectGroup(null);
+      // 跳转到 /agents 页面
       router.push(`/agents?dept=${deptId}`);
     },
-    [router],
+    [router, selectDepartment, selectGroup],
   );
 
   const handleGroupClick = useCallback(
     (groupId: string) => {
+      // 设置选中的小组，清空部门选择
+      selectGroup(groupId);
+      selectDepartment(null);
+      // 跳转到 /agents 页面
       router.push(`/agents?group=${groupId}`);
+    },
+    [router, selectGroup, selectDepartment],
+  );
+
+  // 删除部门
+  const handleDeleteDepartment = useCallback(
+    async (deptId: string, deptName: string) => {
+      const ok = await (window as any).notify?.confirm({
+        title: "删除部门",
+        description: `确定要删除部门"${deptName}"吗？此操作不会删除部门下的AI员工，它们将被移至"待分配部门"。`,
+      });
+      if (!ok) return;
+
+      safe(() => fetch(`/api/department/${deptId}`, { method: "DELETE" }))
+        .ifOk(async (res) => {
+          if (res.ok) {
+            toast.success("部门已删除");
+            // 刷新部门列表
+            router.refresh();
+          }
+        })
+        .ifFail(() => {
+          toast.error("删除失败");
+        });
+    },
+    [router],
+  );
+
+  // 删除小组
+  const handleDeleteGroup = useCallback(
+    async (groupId: string, groupName: string) => {
+      const ok = await (window as any).notify?.confirm({
+        title: "删除小组",
+        description: `确定要删除小组"${groupName}"吗？此操作不会删除小组下的AI员工，它们将被移至"未分组"。`,
+      });
+      if (!ok) return;
+
+      safe(() => fetch(`/api/agent-groups/${groupId}`, { method: "DELETE" }))
+        .ifOk(async (res) => {
+          if (res.ok) {
+            toast.success("小组已删除");
+            // 刷新部门列表
+            router.refresh();
+          }
+        })
+        .ifFail(() => {
+          toast.error("删除失败");
+        });
     },
     [router],
   );
@@ -134,15 +207,9 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                 <div key={dept.id}>
                   {/* 部门项 */}
                   <SidebarMenuItem>
-                    <div
-                      className="group/dept flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-accent transition-colors w-full cursor-pointer"
-                      onClick={() => toggleDepartment(dept.id)}
-                    >
+                    <div className="group/dept flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-accent transition-colors w-full">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleDepartment(dept.id);
-                        }}
+                        onClick={() => toggleDepartment(dept.id)}
                         className="flex-shrink-0 w-5 h-5 flex items-center justify-center hover:bg-accent rounded"
                       >
                         {isExpanded ? (
@@ -152,27 +219,67 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                         )}
                       </button>
                       <span className="text-sm mr-1">{dept.icon}</span>
-                      <span className="flex-1 text-sm truncate">
+                      <span
+                        className="flex-1 text-sm truncate cursor-pointer hover:underline"
+                        onClick={() => _handleDepartmentClick(dept.id)}
+                      >
                         {dept.name}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {agentCount}
                       </span>
                       {canCreateAgent(userRole) && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                router.push("/agents?action=createGroup");
-                              }}
-                              className="flex-shrink-0 w-5 h-5 flex items-center justify-center opacity-0 group-hover/dept:opacity-100 hover:bg-accent rounded transition-opacity"
-                            >
-                              <Plus className="w-3 h-3" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="right">新建小组</TooltipContent>
-                        </Tooltip>
+                        <>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push("/agents?action=createGroup");
+                                }}
+                                className="flex-shrink-0 w-5 h-5 flex items-center justify-center opacity-0 group-hover/dept:opacity-100 hover:bg-accent rounded transition-opacity"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              新建小组
+                            </TooltipContent>
+                          </Tooltip>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex-shrink-0 w-5 h-5 flex items-center justify-center opacity-0 group-hover/dept:opacity-100 hover:bg-accent rounded transition-opacity"
+                              >
+                                <MoreHorizontal className="w-3 h-3" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  router.push(
+                                    `/agents?action=editDepartment&id=${dept.id}`,
+                                  );
+                                }}
+                              >
+                                <Pencil className="w-4 h-4 mr-2" />
+                                重命名
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleDeleteDepartment(dept.id, dept.name);
+                                }}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                删除
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </>
                       )}
                     </div>
                   </SidebarMenuItem>
@@ -185,19 +292,55 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
 
                         return (
                           <SidebarMenuItem key={group.id}>
-                            <SidebarMenuButton
-                              onClick={() => handleGroupClick(group.id)}
-                              className="group/group"
-                            >
-                              <span className="w-5" /> {/* 缩进占位 */}
+                            <div className="group/group flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-accent transition-colors w-full">
+                              <span className="w-5 flex-shrink-0" />{" "}
+                              {/* 缩进占位 */}
                               <span className="text-sm mr-1">{group.icon}</span>
-                              <span className="flex-1 text-sm truncate">
+                              <span
+                                className="flex-1 text-sm truncate cursor-pointer hover:underline"
+                                onClick={() => handleGroupClick(group.id)}
+                              >
                                 {group.name}
                               </span>
                               <span className="text-xs text-muted-foreground">
                                 {group.agentCount}
                               </span>
-                            </SidebarMenuButton>
+                              {canCreateAgent(userRole) && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="flex-shrink-0 w-5 h-5 flex items-center justify-center opacity-0 group-hover/group:opacity-100 hover:bg-accent rounded transition-opacity"
+                                    >
+                                      <MoreHorizontal className="w-3 h-3" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        router.push(
+                                          `/agents?action=editGroup&id=${group.id}`,
+                                        );
+                                      }}
+                                    >
+                                      <Pencil className="w-4 h-4 mr-2" />
+                                      重命名
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        handleDeleteGroup(group.id, group.name);
+                                      }}
+                                      className="text-destructive"
+                                    >
+                                      <Trash2 className="w-4 h-4 mr-2" />
+                                      删除
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
+                            </div>
 
                             {/* 小组下的AI员工 */}
                             {groupAgents.map((agent, idx) => (

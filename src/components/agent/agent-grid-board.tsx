@@ -11,6 +11,10 @@ import { useState } from "react";
 import { MoveAgentDialog } from "./move-agent-dialog";
 import { useAgentManagementStore } from "@/app/store/agent-management.store";
 import { DepartmentWithGroups } from "@/lib/db/pg/repositories/department-repository.pg";
+import { appStore } from "@/app/store";
+import { ChatMention } from "app-types/chat";
+import { generateUUID } from "lib/utils";
+import { useRouter } from "next/navigation";
 
 interface AgentGridBoardProps {
   agents: AgentSummary[];
@@ -31,6 +35,7 @@ export function AgentGridBoard({
   departments,
 }: AgentGridBoardProps) {
   const t = useTranslations();
+  const router = useRouter();
   const mutateAgents = useMutateAgents();
   const { openMoveAgentDialog, closeMoveAgentDialog, isMoveAgentDialogOpen } =
     useAgentManagementStore();
@@ -56,6 +61,25 @@ export function AgentGridBoard({
     }
 
     return { departmentName: undefined, groupName: undefined };
+  };
+
+  // 点击卡片直接对话
+  const handleCardClick = (agent: AgentSummary) => {
+    const newMention: ChatMention = {
+      type: "agent",
+      agentId: agent.id,
+      name: agent.name,
+      icon: agent.icon,
+      description: agent.description,
+    };
+
+    const newThreadId = generateUUID();
+    appStore.setState(() => ({
+      threadMentions: {
+        [newThreadId]: [newMention],
+      },
+    }));
+    router.push(`/chat/${newThreadId}`);
   };
 
   const handleDelete = async (agentId: string) => {
@@ -153,6 +177,7 @@ export function AgentGridBoard({
             type="agent"
             item={agent}
             href={`/agent/${agent.id}`}
+            onCardClick={() => handleCardClick(agent)}
             onVisibilityChange={handleVisibilityChange}
             isVisibilityChangeLoading={visibilityChangeLoading === agent.id}
             isDeleteLoading={deletingAgentId === agent.id}
