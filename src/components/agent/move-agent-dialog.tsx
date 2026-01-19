@@ -134,17 +134,19 @@ export function MoveAgentDialog({
                 <SelectValue placeholder="选择部门" />
               </SelectTrigger>
               <SelectContent>
-                {departments?.map((dept) => (
-                  <SelectItem key={dept.id} value={dept.id}>
-                    <span className="flex items-center gap-2">
-                      <span>{dept.icon}</span>
-                      <span>{dept.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        ({dept.agentCount} 个AI员工)
+                {departments
+                  ?.filter((dept) => dept.name !== "待分配部门")
+                  .map((dept) => (
+                    <SelectItem key={dept.id} value={dept.id}>
+                      <span className="flex items-center gap-2">
+                        <span>{dept.icon}</span>
+                        <span>{dept.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          ({dept.agentCount} 个AI员工)
+                        </span>
                       </span>
-                    </span>
-                  </SelectItem>
-                ))}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>

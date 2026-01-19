@@ -48,8 +48,13 @@ interface SidebarAgentsTreeProps {
 export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
   const mounted = useMounted();
   const router = useRouter();
-  const { departments, isLoading } = useDepartments();
-  const { selectDepartment, selectGroup } = useAgentManagementStore();
+  const { departments, isLoading, mutate } = useDepartments();
+  const {
+    selectDepartment,
+    selectGroup,
+    openEditDepartmentDialog,
+    openEditGroupDialog,
+  } = useAgentManagementStore();
   const [expandedDepts, setExpandedDepts] = useState<string[]>([]);
 
   // 获取所有AI员工（按部门/小组分组）
@@ -146,14 +151,14 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
           if (res.ok) {
             toast.success("部门已删除");
             // 刷新部门列表
-            router.refresh();
+            mutate();
           }
         })
         .ifFail(() => {
           toast.error("删除失败");
         });
     },
-    [router],
+    [mutate],
   );
 
   // 删除小组
@@ -170,14 +175,14 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
           if (res.ok) {
             toast.success("小组已删除");
             // 刷新部门列表
-            router.refresh();
+            mutate();
           }
         })
         .ifFail(() => {
           toast.error("删除失败");
         });
     },
-    [router],
+    [mutate],
   );
 
   if (isLoading) {
@@ -250,7 +255,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                             <DropdownMenuTrigger asChild>
                               <button
                                 onClick={(e) => e.stopPropagation()}
-                                className="flex-shrink-0 w-5 h-5 flex items-center justify-center opacity-0 group-hover/dept:opacity-100 hover:bg-accent rounded transition-opacity"
+                                className="flex-shrink-0 w-5 h-5 flex items-center justify-center hover:bg-accent rounded"
                               >
                                 <MoreHorizontal className="w-3 h-3" />
                               </button>
@@ -259,9 +264,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  router.push(
-                                    `/agents?action=editDepartment&id=${dept.id}`,
-                                  );
+                                  openEditDepartmentDialog(dept);
                                 }}
                               >
                                 <Pencil className="w-4 h-4 mr-2" />
@@ -310,7 +313,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                                   <DropdownMenuTrigger asChild>
                                     <button
                                       onClick={(e) => e.stopPropagation()}
-                                      className="flex-shrink-0 w-5 h-5 flex items-center justify-center opacity-0 group-hover/group:opacity-100 hover:bg-accent rounded transition-opacity"
+                                      className="flex-shrink-0 w-5 h-5 flex items-center justify-center hover:bg-accent rounded"
                                     >
                                       <MoreHorizontal className="w-3 h-3" />
                                     </button>
@@ -319,9 +322,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                                     <DropdownMenuItem
                                       onClick={(e) => {
                                         e.preventDefault();
-                                        router.push(
-                                          `/agents?action=editGroup&id=${group.id}`,
-                                        );
+                                        openEditGroupDialog(group);
                                       }}
                                     >
                                       <Pencil className="w-4 h-4 mr-2" />
@@ -399,19 +400,6 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                 </div>
               );
             })}
-
-          {/* 新建部门按钮 */}
-          {canCreateAgent(userRole) && (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={() => router.push("/agents?action=createDepartment")}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                新建部门
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
