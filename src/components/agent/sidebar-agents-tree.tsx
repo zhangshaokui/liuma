@@ -56,6 +56,8 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
     openEditGroupDialog,
   } = useAgentManagementStore();
   const [expandedDepts, setExpandedDepts] = useState<string[]>([]);
+  const [deptMenuOpen, setDeptMenuOpen] = useState<string | null>(null);
+  const [groupMenuOpen, setGroupMenuOpen] = useState<string | null>(null);
 
   // 获取所有AI员工（按部门/小组分组）
   const { agents } = useAgents({ limit: 100 });
@@ -223,10 +225,19 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                         {agentCount}
                       </span>
                       {canCreateAgent(userRole) && (
-                        <DropdownMenu>
+                        <DropdownMenu
+                          open={deptMenuOpen === dept.id}
+                          onOpenChange={(open) => {
+                            if (!open) setDeptMenuOpen(null);
+                            else setDeptMenuOpen(dept.id);
+                          }}
+                        >
                           <DropdownMenuTrigger asChild>
                             <button
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeptMenuOpen(dept.id);
+                              }}
                               className="flex-shrink-0 w-5 h-5 flex items-center justify-center hover:bg-accent rounded"
                             >
                               <MoreHorizontal className="w-3 h-3" />
@@ -236,6 +247,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                             <DropdownMenuItem
                               onClick={(e) => {
                                 e.preventDefault();
+                                setDeptMenuOpen(null);
                                 openEditDepartmentDialog(dept);
                               }}
                             >
@@ -245,6 +257,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                             <DropdownMenuItem
                               onClick={(e) => {
                                 e.preventDefault();
+                                setDeptMenuOpen(null);
                                 handleDeleteDepartment(dept.id, dept.name);
                               }}
                               className="text-destructive"
@@ -280,10 +293,19 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                                 {group.agentCount}
                               </span>
                               {canCreateAgent(userRole) && (
-                                <DropdownMenu>
+                                <DropdownMenu
+                                  open={groupMenuOpen === group.id}
+                                  onOpenChange={(open) => {
+                                    if (!open) setGroupMenuOpen(null);
+                                    else setGroupMenuOpen(group.id);
+                                  }}
+                                >
                                   <DropdownMenuTrigger asChild>
                                     <button
-                                      onClick={(e) => e.stopPropagation()}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setGroupMenuOpen(group.id);
+                                      }}
                                       className="flex-shrink-0 w-5 h-5 flex items-center justify-center hover:bg-accent rounded"
                                     >
                                       <MoreHorizontal className="w-3 h-3" />
@@ -293,6 +315,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                                     <DropdownMenuItem
                                       onClick={(e) => {
                                         e.preventDefault();
+                                        setGroupMenuOpen(null);
                                         openEditGroupDialog(group);
                                       }}
                                     >
@@ -302,6 +325,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                                     <DropdownMenuItem
                                       onClick={(e) => {
                                         e.preventDefault();
+                                        setGroupMenuOpen(null);
                                         handleDeleteGroup(group.id, group.name);
                                       }}
                                       className="text-destructive"

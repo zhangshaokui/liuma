@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { SidebarMenuAction } from "ui/sidebar";
 import { SidebarMenuButton } from "ui/sidebar";
@@ -36,12 +36,12 @@ export function AppSidebarAgents({ userRole }: { userRole?: string | null }) {
               {t("Layout.agents")}
             </SidebarMenuButton>
             {canCreateAgent(userRole) && (
-              <SidebarMenuAction className="group-hover/agents:opacity-100 opacity-0 transition-opacity">
+              <SidebarMenuAction className="group-hover/agents:opacity-100 opacity-100 transition-opacity">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <PlusIcon
+                        <MoreHorizontal
                           className="size-4"
                           data-testid="sidebar-create-button"
                         />

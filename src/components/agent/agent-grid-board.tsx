@@ -151,8 +151,8 @@ export function AgentGridBoard({
     );
   }
 
-  // 加载状态
-  if (isLoading) {
+  // 加载状态 - 只在初次加载时显示（避免切换时闪现）
+  if (isLoading && agents.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-muted-foreground">加载中...</div>
