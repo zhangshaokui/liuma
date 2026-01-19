@@ -251,6 +251,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
                               onClick={(e) => {
+                                e.stopPropagation();
                                 e.preventDefault();
                                 setDeptMenuOpen(null);
                                 openEditDepartmentDialog(dept);
@@ -261,6 +262,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={(e) => {
+                                e.stopPropagation();
                                 e.preventDefault();
                                 setDeptMenuOpen(null);
                                 handleDeleteDepartment(dept.id, dept.name);
@@ -319,6 +321,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                                   <DropdownMenuContent align="end">
                                     <DropdownMenuItem
                                       onClick={(e) => {
+                                        e.stopPropagation();
                                         e.preventDefault();
                                         setGroupMenuOpen(null);
                                         openEditGroupDialog(group);
@@ -329,6 +332,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                       onClick={(e) => {
+                                        e.stopPropagation();
                                         e.preventDefault();
                                         setGroupMenuOpen(null);
                                         handleDeleteGroup(group.id, group.name);
