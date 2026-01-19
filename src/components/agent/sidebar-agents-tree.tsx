@@ -12,7 +12,7 @@ import { generateUUID } from "lib/utils";
 import { ChevronDown, ChevronRight, MoreHorizontal, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import {
   SidebarGroup,
@@ -53,18 +53,20 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
     return grouped;
   }, [agents]);
 
-  // 计算每个部门的AI员工总数
+  // 计算总数（包括未分组的）
+  const totalAgentCount = useMemo(() => {
+    return agents?.length || 0;
+  }, [agents]);
+
+  // 计算每个部门的AI员工总数（使用dept.agentCount）
   const departmentAgentCount = useMemo(() => {
     const count: Record<string, number> = {};
     departments?.forEach((dept) => {
-      let total = 0;
-      dept.groups.forEach((group) => {
-        total += agentsByGroup[group.id]?.length || 0;
-      });
-      count[dept.id] = total;
+      // 直接使用dept.agentCount，它已经包含了该部门所有小组的员工数
+      count[dept.id] = dept.agentCount || 0;
     });
     return count;
-  }, [departments, agentsByGroup]);
+  }, [departments]);
 
   const toggleDepartment = useCallback((deptId: string) => {
     setExpandedDepts((prev) =>
@@ -75,11 +77,11 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
   }, []);
 
   // 自动展开第一个部门
-  useState(() => {
+  useEffect(() => {
     if (departments && departments.length > 0 && expandedDepts.length === 0) {
       setExpandedDepts([departments[0].id]);
     }
-  });
+  }, [departments, expandedDepts]);
 
   const handleAgentClick = useCallback(
     (agent: any) => {
@@ -141,7 +143,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
               <span className="text-lg">👥</span>
               <span className="flex-1">{t("Layout.agents")}</span>
               <span className="text-xs text-muted-foreground">
-                {agents?.length || 0}
+                {totalAgentCount}
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>

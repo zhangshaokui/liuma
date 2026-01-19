@@ -4,17 +4,11 @@ import { useAgentManagementStore } from "@/app/store/agent-management.store";
 import { useMutateAgents } from "@/hooks/queries/use-agents";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Button } from "ui/button";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "ui/resizable";
 import { AgentBoardView } from "./agent-board-view";
 import { CreateDepartmentDialog } from "./create-department-dialog";
 import { CreateGroupDialog } from "./create-group-dialog";
-import { DepartmentSidebar } from "./department-sidebar";
 import { MoveAgentDialog } from "./move-agent-dialog";
 
 interface AgentsManagedListProps {
@@ -87,35 +81,25 @@ export function AgentsManagedList({
         {/* 顶部工具栏 */}
         <div className="h-14 border-b flex items-center justify-between px-4">
           <h1 className="text-xl font-semibold">{t("Layout.agents")}</h1>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={openCreateDepartmentDialog}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            新建部门
-          </Button>
+          {userRole === "admin" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={openCreateDepartmentDialog}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              新建部门
+            </Button>
+          )}
         </div>
 
-        {/* 主内容区：左侧导航 + 右侧看板 */}
+        {/* 主内容区：AI员工卡片视图（全宽） */}
         <div className="flex-1 overflow-hidden">
-          <ResizablePanelGroup direction="horizontal" className="h-full">
-            {/* 左侧导航 */}
-            <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
-              <DepartmentSidebar userId={userId} />
-            </ResizablePanel>
-
-            <ResizableHandle withHandle />
-
-            {/* 右侧看板 */}
-            <ResizablePanel defaultSize={75}>
-              <AgentBoardView
-                userId={userId}
-                userRole={userRole}
-                onAgentsChange={handleRefresh}
-              />
-            </ResizablePanel>
-          </ResizablePanelGroup>
+          <AgentBoardView
+            userId={userId}
+            userRole={userRole}
+            onAgentsChange={handleRefresh}
+          />
         </div>
       </div>
 
