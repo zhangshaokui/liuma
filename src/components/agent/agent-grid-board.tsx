@@ -10,6 +10,7 @@ import { safe } from "ts-safe";
 import { useState } from "react";
 import { MoveAgentDialog } from "./move-agent-dialog";
 import { useAgentManagementStore } from "@/app/store/agent-management.store";
+import { DepartmentWithGroups } from "@/lib/db/pg/repositories/department-repository.pg";
 
 interface AgentGridBoardProps {
   agents: AgentSummary[];
@@ -18,6 +19,7 @@ interface AgentGridBoardProps {
   totalCount?: number;
   onAgentsMutate?: () => void;
   onAgentsChange?: () => void;
+  departments?: DepartmentWithGroups[];
 }
 
 export function AgentGridBoard({
@@ -26,6 +28,7 @@ export function AgentGridBoard({
   totalCount,
   onAgentsMutate,
   onAgentsChange,
+  departments,
 }: AgentGridBoardProps) {
   const t = useTranslations();
   const mutateAgents = useMutateAgents();
@@ -35,6 +38,25 @@ export function AgentGridBoard({
   const [visibilityChangeLoading, setVisibilityChangeLoading] = useState<
     string | null
   >(null);
+
+  // 查找 agent 所属的部门和小组名称
+  const getAgentDepartmentInfo = (agent: AgentSummary) => {
+    if (!agent.groupId || !departments) {
+      return { departmentName: undefined, groupName: undefined };
+    }
+
+    for (const dept of departments) {
+      const group = dept.groups.find((g) => g.id === agent.groupId);
+      if (group) {
+        return {
+          departmentName: dept.name,
+          groupName: group.name,
+        };
+      }
+    }
+
+    return { departmentName: undefined, groupName: undefined };
+  };
 
   const handleDelete = async (agentId: string) => {
     const ok = await (window as any).notify?.confirm({
@@ -137,6 +159,7 @@ export function AgentGridBoard({
             onDelete={handleDelete}
             hideVisibilityAndBookmark={true}
             onMove={() => handleMoveAgent(agent.id, agent.name)}
+            departmentInfo={getAgentDepartmentInfo(agent)}
           />
         ))}
       </div>

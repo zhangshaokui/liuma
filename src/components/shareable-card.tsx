@@ -54,6 +54,10 @@ interface ShareableCardProps {
     onAdded?: () => void;
   }>;
   extraContent?: ReactNode;
+  departmentInfo?: {
+    departmentName?: string;
+    groupName?: string;
+  };
 }
 
 export function ShareableCard({
@@ -78,6 +82,7 @@ export function ShareableCard({
   onCardClick,
   AddToStoreDialog: _AddToStoreDialog,
   extraContent,
+  departmentInfo,
 }: ShareableCardProps) {
   const t = useTranslations();
   const locale = useLocale();
@@ -152,6 +157,17 @@ export function ShareableCard({
 
           <CardFooter className="shrink min-h-0 overflow-visible">
             <div className="flex items-center gap-2 w-full min-w-0">
+              {departmentInfo &&
+                (departmentInfo.departmentName || departmentInfo.groupName) && (
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-xs text-muted-foreground font-medium truncate min-w-0">
+                      {departmentInfo.departmentName && departmentInfo.groupName
+                        ? `${departmentInfo.departmentName} / ${departmentInfo.groupName}`
+                        : departmentInfo.departmentName ||
+                          departmentInfo.groupName}
+                    </span>
+                  </div>
+                )}
               {!isOwner && item.userName && (
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Avatar className="size-4 ring shrink-0 rounded-full">
@@ -259,6 +275,19 @@ export function ShareableCard({
 
             <CardFooter className="shrink min-h-0 overflow-visible">
               <div className="flex items-center gap-2 w-full min-w-0">
+                {departmentInfo &&
+                  (departmentInfo.departmentName ||
+                    departmentInfo.groupName) && (
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-xs text-muted-foreground font-medium truncate min-w-0">
+                        {departmentInfo.departmentName &&
+                        departmentInfo.groupName
+                          ? `${departmentInfo.departmentName} / ${departmentInfo.groupName}`
+                          : departmentInfo.departmentName ||
+                            departmentInfo.groupName}
+                      </span>
+                    </div>
+                  )}
                 {!isOwner && item.userName && (
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Avatar className="size-4 ring shrink-0 rounded-full">

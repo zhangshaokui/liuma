@@ -73,6 +73,7 @@ export function AgentBoardView({
           totalCount={filteredAgents.length}
           onAgentsMutate={mutate}
           onAgentsChange={onAgentsChange}
+          departments={departments}
         />
       </div>
     </div>

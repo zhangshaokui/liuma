@@ -70,12 +70,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
     );
   }, []);
 
-  // 自动展开第一个部门
-  useEffect(() => {
-    if (departments && departments.length > 0 && expandedDepts.length === 0) {
-      setExpandedDepts([departments[0].id]);
-    }
-  }, [departments, expandedDepts]);
+  // 不自动展开部门，默认全部折叠
 
   const handleAgentClick = useCallback(
     (agent: any) => {
@@ -98,7 +93,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
     [router],
   );
 
-  const handleDepartmentClick = useCallback(
+  const _handleDepartmentClick = useCallback(
     (deptId: string) => {
       router.push(`/agents?dept=${deptId}`);
     },
@@ -139,9 +134,15 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                 <div key={dept.id}>
                   {/* 部门项 */}
                   <SidebarMenuItem>
-                    <div className="group/dept flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-accent transition-colors w-full">
+                    <div
+                      className="group/dept flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-accent transition-colors w-full cursor-pointer"
+                      onClick={() => toggleDepartment(dept.id)}
+                    >
                       <button
-                        onClick={() => toggleDepartment(dept.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleDepartment(dept.id);
+                        }}
                         className="flex-shrink-0 w-5 h-5 flex items-center justify-center hover:bg-accent rounded"
                       >
                         {isExpanded ? (
@@ -151,10 +152,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                         )}
                       </button>
                       <span className="text-sm mr-1">{dept.icon}</span>
-                      <span
-                        className="flex-1 text-sm truncate cursor-pointer"
-                        onClick={() => handleDepartmentClick(dept.id)}
-                      >
+                      <span className="flex-1 text-sm truncate">
                         {dept.name}
                       </span>
                       <span className="text-xs text-muted-foreground">
@@ -197,7 +195,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                                 {group.name}
                               </span>
                               <span className="text-xs text-muted-foreground">
-                                {groupAgents.length}
+                                {group.agentCount}
                               </span>
                             </SidebarMenuButton>
 
