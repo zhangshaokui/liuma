@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { ShareableCard } from "@/components/shareable-card";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { AgentSummary } from "app-types/agent";
 import { useMutateAgents } from "@/hooks/queries/use-agents";
 import { handleErrorWithToast } from "ui/shared-toast";
@@ -43,6 +44,8 @@ export function AgentGridBoard({
   const [visibilityChangeLoading, setVisibilityChangeLoading] = useState<
     string | null
   >(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [agentToDelete, setAgentToDelete] = useState<string | null>(null);
 
   // 查找 agent 所属的部门和小组名称
   const getAgentDepartmentInfo = (agent: AgentSummary) => {
@@ -82,23 +85,26 @@ export function AgentGridBoard({
     router.push(`/chat/${newThreadId}`);
   };
 
-  const handleDelete = async (agentId: string) => {
-    const ok = await (window as any).notify?.confirm({
-      title: t("Common.delete"),
-      description: t("Agent.deleteConfirm"),
-    });
-    if (!ok) return;
+  const handleDelete = (agentId: string) => {
+    setAgentToDelete(agentId);
+    setDeleteDialogOpen(true);
+  };
 
-    safe(() => setDeletingAgentId(agentId))
+  const handleDeleteConfirm = async () => {
+    if (!agentToDelete) return;
+
+    safe(() => setDeletingAgentId(agentToDelete))
       .map(async () => {
-        const response = await fetch(`/api/agent/${agentId}`, {
+        const response = await fetch(`/api/agent/${agentToDelete}`, {
           method: "DELETE",
         });
         if (!response.ok) throw new Error("Failed to delete agent");
         return response.json();
       })
       .ifOk(() => {
-        mutateAgents({ id: agentId }, true);
+        setDeleteDialogOpen(false);
+        setAgentToDelete(null);
+        mutateAgents({ id: agentToDelete }, true);
         toast.success(t("Agent.deleted"));
         onAgentsChange?.();
       })
@@ -194,6 +200,14 @@ export function AgentGridBoard({
         open={isMoveAgentDialogOpen}
         onOpenChange={closeMoveAgentDialog}
         onSuccess={onAgentsMutate}
+      />
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title={t("Common.delete")}
+        description={t("Agent.deleteConfirm")}
+        onConfirm={handleDeleteConfirm}
       />
     </div>
   );

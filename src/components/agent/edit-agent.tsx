@@ -45,11 +45,11 @@ import { GenerateAgentDialog } from "./generate-agent-dialog";
 import { AddToStoreDialog } from "./add-to-store-dialog";
 import { AgentIconPicker } from "./agent-icon-picker";
 import { AgentToolSelector } from "./agent-tool-selector";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import {
   RandomDataGeneratorExample,
   WeatherExample,
 } from "lib/ai/agent/example";
-import { notify } from "lib/notify";
 
 const defaultConfig = (): PartialBy<
   Omit<Agent, "createdAt" | "updatedAt" | "userId">,
@@ -99,6 +99,7 @@ export default function EditAgent({
   const [openGenerateAgentDialog, setOpenGenerateAgentDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isAddToStoreDialogOpen, setIsAddToStoreDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -201,10 +202,11 @@ export default function EditAgent({
 
   const deleteAgent = useCallback(async () => {
     if (!initialAgent?.id) return;
-    const ok = await notify.confirm({
-      description: t("Agent.deleteConfirm"),
-    });
-    if (!ok) return;
+    setDeleteDialogOpen(true);
+  }, [initialAgent?.id]);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!initialAgent?.id) return;
     safe(() => setIsSaving(true))
       .map(() =>
         fetcher(`/api/agent/${initialAgent.id}`, {
@@ -338,7 +340,7 @@ export default function EditAgent({
                   onDelete={deleteAgent}
                   isDeleteLoading={isLoading}
                   onAddToStore={
-                    userRole === 'admin' && !initialAgent.isTemplate
+                    userRole === "admin" && !initialAgent.isTemplate
                       ? () => setIsAddToStoreDialogOpen(true)
                       : undefined
                   }
@@ -404,16 +406,17 @@ export default function EditAgent({
         {isAdmin && hasEditAccess && (
           <div className="flex flex-col gap-4 mt-4 p-4 border rounded-lg bg-secondary/20">
             <p className="text-sm font-medium">智能体商店选项</p>
-            
+
             <div className="flex items-center gap-2">
               <Checkbox
                 id="is-template"
                 checked={agent.isTemplate || false}
                 disabled={isLoading}
                 onCheckedChange={(checked) =>
-                  setAgent({ 
+                  setAgent({
                     isTemplate: checked === true,
-                    categoryId: checked === true ? (agent.categoryId ?? null) : null,
+                    categoryId:
+                      checked === true ? (agent.categoryId ?? null) : null,
                   })
                 }
               />
@@ -549,14 +552,22 @@ export default function EditAgent({
                 {initialAgent.categoryId ? (
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-md border border-border">
                     <span className="text-lg">
-                      {categories.find((c) => c.id === initialAgent.categoryId)?.emoji}
+                      {
+                        categories.find((c) => c.id === initialAgent.categoryId)
+                          ?.emoji
+                      }
                     </span>
                     <span className="font-medium">
-                      {categories.find((c) => c.id === initialAgent.categoryId)?.name}
+                      {
+                        categories.find((c) => c.id === initialAgent.categoryId)
+                          ?.name
+                      }
                     </span>
                   </div>
                 ) : (
-                  <span className="text-sm text-muted-foreground">未设置类别</span>
+                  <span className="text-sm text-muted-foreground">
+                    未设置类别
+                  </span>
                 )}
                 <Button
                   variant="outline"
@@ -619,6 +630,14 @@ export default function EditAgent({
           isTemplate={initialAgent.isTemplate}
         />
       )}
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="删除AI员工"
+        description={t("Agent.deleteConfirm")}
+        onConfirm={handleDeleteConfirm}
+      />
     </ScrollArea>
   );
 }

@@ -13,8 +13,7 @@ import useSWR from "swr";
 import { fetcher } from "lib/utils";
 import { Visibility } from "@/components/shareable-actions";
 import { ShareableCard } from "@/components/shareable-card";
-import { notify } from "lib/notify";
-import { useState } from "react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { safe } from "ts-safe";
 import { canCreateAgent } from "lib/auth/client-permissions";
@@ -43,6 +42,8 @@ export function AgentsList({
   const [visibilityChangeLoading, setVisibilityChangeLoading] = useState<
     string | null
   >(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [agentToDelete, setAgentToDelete] = useState<string | null>(null);
 
   const { data: allAgents, isLoading } = useSWR<AgentSummary[]>(
     `/api/agent?filters=mine&key=${refreshKey}`,
@@ -91,21 +92,24 @@ export function AgentsList({
       .watch(() => setVisibilityChangeLoading(null));
   };
 
-  const deleteAgent = async (agentId: string) => {
-    const ok = await notify.confirm({
-      title: t("Common.delete"),
-      description: t("Agent.deleteConfirm"),
-    });
-    if (!ok) return;
-    safe(() => setDeletingAgentLoading(agentId))
+  const deleteAgent = (agentId: string) => {
+    setAgentToDelete(agentId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!agentToDelete) return;
+    safe(() => setDeletingAgentLoading(agentToDelete))
       .map(() =>
-        fetcher(`/api/agent/${agentId}`, {
+        fetcher(`/api/agent/${agentToDelete}`, {
           method: "DELETE",
         }),
       )
       .ifOk(() => {
-        mutateAgents({ id: agentId }, true);
+        mutateAgents({ id: agentToDelete }, true);
         toast.success(t("Agent.deleted"));
+        setDeleteDialogOpen(false);
+        setAgentToDelete(null);
       })
       .ifFail((e) => {
         handleErrorWithToast(e);
@@ -208,6 +212,14 @@ export function AgentsList({
           }}
         />
       )}
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title={t("Common.delete")}
+        description={t("Agent.deleteConfirm")}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }

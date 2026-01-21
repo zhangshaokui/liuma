@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useAgentManagementStore } from "@/app/store/agent-management.store";
 import { DepartmentWithGroups } from "@/hooks/queries/use-departments";
 import { useDepartmentMutations } from "@/hooks/queries/use-departments";
 import { ContextMenuItem } from "ui/context-menu";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Edit, Trash2, Users } from "lucide-react";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { toast } from "sonner";
@@ -21,22 +23,21 @@ export function DepartmentContextMenu({
 
   const { deleteDepartment } = useDepartmentMutations();
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   const handleCreateGroup = async () => {
     openCreateGroupDialog(department.id);
   };
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
     if (department.name === "默认部门") {
       toast.error("默认部门不能删除");
       return;
     }
+    setDeleteDialogOpen(true);
+  };
 
-    const ok = await (window as any).notify?.confirm({
-      title: "删除部门",
-      description: `确定要删除部门"${department.name}"吗？该操作不会删除部门下的AI员工，它们将被移到"默认部门"。`,
-    });
-    if (!ok) return;
-
+  const handleDeleteConfirm = async () => {
     safe(() => deleteDepartment(department.id))
       .ifOk(() => {
         toast.success("部门已删除");
@@ -69,11 +70,22 @@ export function DepartmentContextMenu({
       </ContextMenuItem>
 
       {department.name !== "默认部门" && (
-        <ContextMenuItem onClick={handleDelete} className="text-destructive">
+        <ContextMenuItem
+          onClick={handleDeleteClick}
+          className="text-destructive"
+        >
           <Trash2 className="w-4 h-4 mr-2" />
           删除部门
         </ContextMenuItem>
       )}
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="删除部门"
+        description={`确定要删除部门"${department.name}"吗？该操作不会删除部门下的AI员工，它们将被移到"默认部门"。`}
+        onConfirm={handleDeleteConfirm}
+      />
     </>
   );
 }
