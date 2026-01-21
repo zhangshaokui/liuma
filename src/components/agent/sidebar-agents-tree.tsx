@@ -47,7 +47,6 @@ interface SidebarAgentsTreeProps {
 }
 
 export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
-  console.log("SidebarAgentsTree component mounted/updated");
   const mounted = useMounted();
   const router = useRouter();
   const { departments, isLoading, mutate } = useDepartments();
@@ -152,9 +151,6 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
       e.preventDefault();
       e.stopPropagation();
 
-      console.log("handleDepartmentClick called with deptId:", deptId);
-      console.log("Current URL:", window.location.href);
-
       // 设置选中的部门，清空小组选择
       selectDepartment(deptId);
       selectGroup(null);
@@ -163,9 +159,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
       toggleDepartment(deptId);
 
       // 跳转到 /agents 页面
-      const targetUrl = `/agents?dept=${deptId}`;
-      console.log("Navigating to:", targetUrl);
-      router.push(targetUrl);
+      router.push(`/agents?dept=${deptId}`);
     },
     [router, selectDepartment, selectGroup, toggleDepartment],
   );

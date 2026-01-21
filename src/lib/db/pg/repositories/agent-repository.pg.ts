@@ -8,7 +8,7 @@ import {
   UserEmployeeTable,
 } from "../schema.pg";
 import { AgentGroupMemberTable } from "../schema.pg";
-import { and, desc, eq, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, ne, or, sql } from "drizzle-orm";
 import { generateUUID } from "lib/utils";
 
 export const pgAgentRepository: AgentRepository = {
@@ -398,22 +398,54 @@ export const pgAgentRepository: AgentRepository = {
     departmentId: string,
   ): Promise<AgentSummary[]> {
     // Get all groups in the department
-    const { AgentGroupTable } = await import("../schema.pg");
+    const { AgentGroupTable, DepartmentTable } = await import("../schema.pg");
+
+    // 检查是否是"默认部门"
+    const [department] = await db
+      .select()
+      .from(DepartmentTable)
+      .where(eq(DepartmentTable.id, departmentId))
+      .limit(1);
+
+    const isDefaultDepartment = department?.name === "默认部门";
+
     const groups = await db
       .select({ id: AgentGroupTable.id })
       .from(AgentGroupTable)
       .where(eq(AgentGroupTable.departmentId, departmentId));
 
-    if (groups.length === 0) {
-      return [];
-    }
-
     const groupIds = groups.map((g) => g.id);
 
-    // Build OR conditions for each group ID
-    const groupConditions = groupIds.map((groupId) =>
-      eq(AgentTable.groupId, groupId),
-    );
+    // 构建查询条件
+    let whereCondition;
+
+    if (isDefaultDepartment) {
+      // 默认部门：显示所有 groupId 为 null 或在该部门小组中的员工
+      if (groupIds.length > 0) {
+        whereCondition = and(
+          eq(AgentTable.userId, currentUserId), // 只查询当前用户的员工
+          or(
+            isNull(AgentTable.groupId),
+            ...groupIds.map((groupId) => eq(AgentTable.groupId, groupId)),
+          ),
+        );
+      } else {
+        // 如果没有小组，只显示 groupId 为 null 的员工
+        whereCondition = and(
+          eq(AgentTable.userId, currentUserId), // 只查询当前用户的员工
+          isNull(AgentTable.groupId),
+        );
+      }
+    } else {
+      // 普通部门：只显示在该部门小组中的员工
+      if (groupIds.length === 0) {
+        return [];
+      }
+      whereCondition = and(
+        eq(AgentTable.userId, currentUserId), // 只查询当前用户的员工
+        or(...groupIds.map((groupId) => eq(AgentTable.groupId, groupId))),
+      );
+    }
 
     const results = await db
       .select({
@@ -439,7 +471,7 @@ export const pgAgentRepository: AgentRepository = {
           eq(BookmarkTable.userId, currentUserId),
         ),
       )
-      .where(or(...groupConditions))
+      .where(whereCondition)
       .orderBy(desc(AgentTable.updatedAt));
 
     // Map database nulls to undefined
