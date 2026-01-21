@@ -1,4 +1,9 @@
-import { agentRepository, agentCategoryRepository } from "lib/db/repository";
+import {
+  agentRepository,
+  agentCategoryRepository,
+  departmentRepository,
+  agentGroupRepository,
+} from "lib/db/repository";
 import { getSession } from "auth/server";
 import { z } from "zod";
 import { serverCache } from "lib/cache";
@@ -116,9 +121,26 @@ export async function POST(request: Request): Promise<Response> {
       }
     }
 
+    // If no groupId specified, assign to default department's "未分组" group
+    let finalGroupId = data.groupId;
+    if (!data.groupId) {
+      // Initialize default department if not exists
+      await departmentRepository.initializeDefaultDepartment(session.user.id);
+
+      // Get the default department's "未分组" group
+      const defaultGroup = await agentGroupRepository.getGroupByName(
+        session.user.id,
+        "未分组",
+      );
+      if (defaultGroup) {
+        finalGroupId = defaultGroup.id;
+      }
+    }
+
     const agent = await agentRepository.insertAgent({
       ...data,
       categoryId: finalCategoryId,
+      groupId: finalGroupId,
       userId: session.user.id,
     });
     serverCache.delete(CacheKeys.agentInstructions(agent.id));

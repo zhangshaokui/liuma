@@ -320,7 +320,7 @@
     "deleteConfirm": "确定要删除部门'{name}'吗？该操作不会删除部门下的AI员工。",
     "deleted": "部门已删除",
     "cannotDeleteDefault": "默认部门不能删除",
-    "ungrouped": "待分配部门",
+    "ungrouped": "默认部门",
     "selectDepartment": "选择部门",
     "departmentName": "部门名称",
     "departmentNamePlaceholder": "例如：市场部、技术部",

@@ -28,6 +28,9 @@ export async function GET(_request: Request) {
   }
 
   try {
+    // 自动迁移：将"待分配部门"重命名为"默认部门"
+    await departmentRepository.migrateOldDepartmentNames(session.user.id);
+
     const departments = await departmentRepository.findWithGroups(
       session.user.id,
     );
@@ -139,6 +142,22 @@ export async function DELETE(request: Request): Promise<Response> {
         { error: "Department ID is required" },
         { status: 400 },
       );
+    }
+
+    // 检查部门是否存在
+    const department = await departmentRepository.findById(departmentId);
+    if (!department) {
+      return Response.json({ error: "部门不存在" }, { status: 404 });
+    }
+
+    // 检查是否为默认部门
+    if (department.name === "默认部门") {
+      return Response.json({ error: "默认部门不能删除" }, { status: 400 });
+    }
+
+    // 检查权限
+    if (department.userId !== session.user.id) {
+      return Response.json({ error: "无权限删除此部门" }, { status: 403 });
     }
 
     await departmentRepository.delete(departmentId, session.user.id);

@@ -20,6 +20,7 @@ import {
 } from "ui/select";
 import { useAgentManagementStore } from "@/app/store/agent-management.store";
 import { useDepartments } from "@/hooks/queries/use-departments";
+import { useSWRConfig } from "swr";
 import { handleErrorWithToast } from "ui/shared-toast";
 import { toast } from "sonner";
 import { safe } from "ts-safe";
@@ -35,9 +36,10 @@ export function MoveAgentDialog({
   onOpenChange,
   onSuccess,
 }: MoveAgentDialogProps) {
-  const { departments } = useDepartments();
+  const { departments, mutate } = useDepartments();
   const { movingAgentId, movingAgentName, closeMoveAgentDialog } =
     useAgentManagementStore();
+  const { mutate: globalMutate } = useSWRConfig();
 
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<
     string | null
@@ -90,9 +92,13 @@ export function MoveAgentDialog({
               toast.success("AI员工已移动");
               onOpenChange(false);
               closeMoveAgentDialog();
+              // 刷新所有相关缓存
+              mutate();
+              globalMutate(
+                (key) =>
+                  typeof key === "string" && key.startsWith("/api/agent"),
+              );
               onSuccess?.();
-              // 刷新部门列表缓存（更新计数）
-              fetch("/api/department", { method: "GET" }).catch(() => {});
             } else {
               throw new Error("Failed to update groupId");
             }
@@ -135,7 +141,7 @@ export function MoveAgentDialog({
               </SelectTrigger>
               <SelectContent>
                 {departments
-                  ?.filter((dept) => dept.name !== "待分配部门")
+                  ?.filter((dept) => dept.name !== "默认部门")
                   .map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       <span className="flex items-center gap-2">

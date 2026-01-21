@@ -17,6 +17,7 @@ import {
   Plus,
   Pencil,
   Trash2,
+  PlusCircle,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -39,12 +40,14 @@ import {
 } from "ui/dropdown-menu";
 import { AgentDropdown } from "./agent-dropdown";
 import { toast } from "sonner";
+import { ConfirmDialog, useConfirmDialog } from "@/components/confirm-dialog";
 
 interface SidebarAgentsTreeProps {
   userRole?: string | null;
 }
 
 export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
+  console.log("SidebarAgentsTree component mounted/updated");
   const mounted = useMounted();
   const router = useRouter();
   const { departments, isLoading, mutate } = useDepartments();
@@ -54,10 +57,25 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
     selectedGroup,
     openEditDepartmentDialog,
     openEditGroupDialog,
+    openCreateDepartmentDialog,
+    openCreateGroupDialog,
   } = useAgentManagementStore();
   const [expandedDepts, setExpandedDepts] = useState<string[]>([]);
   const [deptMenuOpen, setDeptMenuOpen] = useState<string | null>(null);
   const [groupMenuOpen, setGroupMenuOpen] = useState<string | null>(null);
+
+  // 删除确认对话框状态
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    type: "department" | "group" | null;
+    id: string | null;
+    name: string | null;
+  }>({
+    open: false,
+    type: null,
+    id: null,
+    name: null,
+  });
 
   // 获取所有AI员工（按部门/小组分组）
   const { agents } = useAgents({ limit: 100 });
@@ -128,67 +146,96 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
     [router, selectGroup, selectDepartment],
   );
 
+  const handleDepartmentClick = useCallback(
+    (e: React.MouseEvent, deptId: string) => {
+      // 阻止事件冒泡
+      e.preventDefault();
+      e.stopPropagation();
+
+      console.log("handleDepartmentClick called with deptId:", deptId);
+      console.log("Current URL:", window.location.href);
+
+      // 设置选中的部门，清空小组选择
+      selectDepartment(deptId);
+      selectGroup(null);
+
+      // 展开/折叠部门
+      toggleDepartment(deptId);
+
+      // 跳转到 /agents 页面
+      const targetUrl = `/agents?dept=${deptId}`;
+      console.log("Navigating to:", targetUrl);
+      router.push(targetUrl);
+    },
+    [router, selectDepartment, selectGroup, toggleDepartment],
+  );
+
   // 删除部门
   const handleDeleteDepartment = useCallback(
     async (deptId: string, deptName: string) => {
-      // 使用浏览器原生 confirm 作为备用
-      const ok = window.confirm(
-        `确定要删除部门"${deptName}"吗？此操作不会删除部门下的AI员工，它们将被移至"待分配部门"。`,
-      );
-      if (!ok) return;
-
-      try {
-        const res = await fetch(`/api/department/${deptId}`, {
-          method: "DELETE",
-        });
-        if (res.ok) {
-          toast.success("部门已删除");
-          // 刷新部门列表
-          mutate();
-        } else {
-          const errorData = await res.json().catch(() => ({}));
-          toast.error(errorData.error || "删除失败");
-        }
-      } catch (error) {
-        console.error("Failed to delete department:", error);
-        toast.error("删除失败");
-      }
+      // 打开确认对话框
+      setDeleteDialog({
+        open: true,
+        type: "department",
+        id: deptId,
+        name: deptName,
+      });
     },
-    [mutate],
+    [],
   );
 
   // 删除小组
   const handleDeleteGroup = useCallback(
     async (groupId: string, groupName: string) => {
-      // 使用浏览器原生 confirm 作为备用
-      const ok = window.confirm(
-        `确定要删除小组"${groupName}"吗？此操作不会删除小组下的AI员工，它们将被移至"未分组"。`,
-      );
-      if (!ok) return;
+      // 打开确认对话框
+      setDeleteDialog({
+        open: true,
+        type: "group",
+        id: groupId,
+        name: groupName,
+      });
+    },
+    [],
+  );
 
-      try {
-        const res = await fetch(`/api/agent-groups/${groupId}`, {
+  // 确认删除
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteDialog.type || !deleteDialog.id) return;
+
+    try {
+      if (deleteDialog.type === "department") {
+        const res = await fetch(`/api/department?id=${deleteDialog.id}`, {
           method: "DELETE",
         });
         if (res.ok) {
-          toast.success("小组已删除");
-          // 如果删除的是当前选中的小组，清空选择
-          if (selectedGroup === groupId) {
-            selectGroup(null);
-          }
-          // 刷新部门列表
+          toast.success("部门已删除");
           mutate();
         } else {
           const errorData = await res.json().catch(() => ({}));
           toast.error(errorData.error || "删除失败");
         }
-      } catch (error) {
-        console.error("Failed to delete group:", error);
-        toast.error("删除失败");
+      } else if (deleteDialog.type === "group") {
+        const res = await fetch(`/api/agent-groups?id=${deleteDialog.id}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          toast.success("小组已删除");
+          if (selectedGroup === deleteDialog.id) {
+            selectGroup(null);
+          }
+          mutate();
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          toast.error(errorData.error || "删除失败");
+        }
       }
-    },
-    [mutate, selectedGroup, selectGroup],
-  );
+    } catch (error) {
+      console.error("Failed to delete:", error);
+      toast.error("删除失败");
+    } finally {
+      setDeleteDialog({ open: false, type: null, id: null, name: null });
+    }
+  }, [deleteDialog, mutate, selectedGroup, selectGroup]);
 
   if (isLoading) {
     return (
@@ -203,13 +250,12 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
   }
 
   return (
-    <SidebarGroup>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {/* 部门列表 */}
-          {departments
-            ?.filter((dept) => dept.name !== "待分配部门") // 过滤掉待分配部门
-            .map((dept) => {
+    <>
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {/* 部门列表 */}
+            {departments?.map((dept) => {
               const isExpanded = expandedDepts.includes(dept.id);
               const agentCount = departmentAgentCount[dept.id] || 0;
 
@@ -231,7 +277,7 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                       <span className="text-sm mr-1">{dept.icon}</span>
                       <span
                         className="flex-1 text-sm truncate cursor-pointer hover:underline"
-                        onClick={() => toggleDepartment(dept.id)}
+                        onClick={(e) => handleDepartmentClick(e, dept.id)}
                       >
                         {dept.name}
                       </span>
@@ -410,11 +456,57 @@ export function SidebarAgentsTree({ userRole }: SidebarAgentsTreeProps) {
                       })}
                     </div>
                   )}
+
+                  {/* 展开/折叠状态下都显示"+ 新建小组"按钮 */}
+                  {isExpanded && canCreateAgent(userRole) && (
+                    <SidebarMenuItem
+                      key={`add-group-${dept.id}`}
+                      className="ml-6"
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openCreateGroupDialog(dept.id);
+                        }}
+                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors w-full px-2 py-1"
+                      >
+                        <PlusCircle className="w-3 h-3" />
+                        新小组
+                      </button>
+                    </SidebarMenuItem>
+                  )}
                 </div>
               );
             })}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+
+            {/* "+ 新建部门"按钮 */}
+            {canCreateAgent(userRole) && (
+              <SidebarMenuItem>
+                <button
+                  onClick={() => openCreateDepartmentDialog()}
+                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors w-full px-2 py-1"
+                >
+                  <PlusCircle className="w-3 h-3" />
+                  新部门
+                </button>
+              </SidebarMenuItem>
+            )}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+
+      {/* 删除确认对话框 */}
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}
+        title={deleteDialog.type === "department" ? "删除部门" : "删除小组"}
+        description={
+          deleteDialog.type === "department"
+            ? `确定要删除部门"${deleteDialog.name}"吗？此操作不会删除部门下的AI员工，它们将被移至"默认部门"。`
+            : `确定要删除小组"${deleteDialog.name}"吗？此操作不会删除小组下的AI员工，它们将被移至"未分组"。`
+        }
+        onConfirm={handleConfirmDelete}
+      />
+    </>
   );
 }

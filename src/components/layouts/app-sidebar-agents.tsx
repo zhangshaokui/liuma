@@ -28,50 +28,34 @@ export function AppSidebarAgents({ userRole }: { userRole?: string | null }) {
     <SidebarGroup>
       <SidebarGroupContent className="group-data-[collapsible=icon]:hidden group/agents">
         <SidebarMenu className="group/agents" data-testid="agents-sidebar-menu">
-          <SidebarMenuItem>
+          <SidebarMenuItem className="flex items-center gap-1">
             <SidebarMenuButton
               onClick={() => router.push("/agents")}
-              className="font-semibold"
+              className="font-semibold flex-1 min-w-0"
             >
-              {t("Layout.agents")}
+              <span className="truncate">{t("Layout.agents")}</span>
             </SidebarMenuButton>
             {canCreateAgent(userRole) && (
-              <SidebarMenuAction className="group-hover/agents:opacity-100 opacity-100 transition-opacity">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <MoreHorizontal
-                          className="size-4"
-                          data-testid="sidebar-create-button"
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent side="right" align="center">
-                        新建...
-                      </TooltipContent>
-                    </Tooltip>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.preventDefault();
-                        router.push("/agent/new");
-                      }}
-                      data-testid="sidebar-create-agent-button"
-                    >
-                      新建AI员工
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.preventDefault();
-                        router.push("/agents?action=createDepartment");
-                      }}
-                    >
-                      新建部门
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </SidebarMenuAction>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="size-4 flex items-center justify-center rounded hover:bg-accent transition-colors opacity-0 group-hover/agents:opacity-100 group-hover/agents:transition-opacity flex-shrink-0"
+                    data-testid="sidebar-create-button"
+                  >
+                    <MoreHorizontal className="size-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onSelect={() => {
+                      router.push("/agent/new");
+                    }}
+                    data-testid="sidebar-create-agent-button"
+                  >
+                    创建智能体
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </SidebarMenuItem>
         </SidebarMenu>

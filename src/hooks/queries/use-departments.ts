@@ -22,6 +22,8 @@ export interface DepartmentWithGroups {
     icon: string;
     sortOrder: number;
     agentCount: number;
+    type?: string;
+    departmentId: string | null;
   }>;
   agentCount: number;
 }

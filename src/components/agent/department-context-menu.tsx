@@ -26,14 +26,14 @@ export function DepartmentContextMenu({
   };
 
   const handleDelete = async () => {
-    if (department.name === "待分配部门") {
+    if (department.name === "默认部门") {
       toast.error("默认部门不能删除");
       return;
     }
 
     const ok = await (window as any).notify?.confirm({
       title: "删除部门",
-      description: `确定要删除部门"${department.name}"吗？该操作不会删除部门下的AI员工，它们将被移到"待分配部门"。`,
+      description: `确定要删除部门"${department.name}"吗？该操作不会删除部门下的AI员工，它们将被移到"默认部门"。`,
     });
     if (!ok) return;
 
@@ -68,7 +68,7 @@ export function DepartmentContextMenu({
         重命名部门
       </ContextMenuItem>
 
-      {department.name !== "待分配部门" && (
+      {department.name !== "默认部门" && (
         <ContextMenuItem onClick={handleDelete} className="text-destructive">
           <Trash2 className="w-4 h-4 mr-2" />
           删除部门

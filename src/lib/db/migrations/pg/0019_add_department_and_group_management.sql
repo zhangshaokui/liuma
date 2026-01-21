@@ -35,18 +35,18 @@ CREATE INDEX IF NOT EXISTS "agent_group_id_idx" ON "agent"(group_id);
 
 -- Initialize default department for all users
 INSERT INTO "department" (user_id, name, color, icon, sort_order)
-SELECT id, '待分配部门', '#94a3b8', '📋', 999
+SELECT id, '默认部门', '#94a3b8', '📋', 999
 FROM "user"
 WHERE NOT EXISTS (
   SELECT 1 FROM "department"
-  WHERE "department".user_id = "user".id AND "department".name = '待分配部门'
+  WHERE "department".user_id = "user".id AND "department".name = '默认部门'
 );
 
 -- Initialize default group for all users
 INSERT INTO "agent_group" (user_id, department_id, name, color, icon, sort_order, type)
 SELECT
   u.id,
-  (SELECT id FROM "department" WHERE "department".user_id = u.id AND "department".name = '待分配部门' LIMIT 1),
+  (SELECT id FROM "department" WHERE "department".user_id = u.id AND "department".name = '默认部门' LIMIT 1),
   '未分组',
   '#cbd5e1',
   '📁',
