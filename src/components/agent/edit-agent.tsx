@@ -7,8 +7,8 @@ import { toast } from "sonner";
 import { useMutateAgents } from "@/hooks/queries/use-agents";
 import { useMcpList } from "@/hooks/queries/use-mcp-list";
 import { useWorkflowToolList } from "@/hooks/queries/use-workflow-tool-list";
+import { useCategories } from "@/hooks/queries/use-categories";
 import { useObjectState } from "@/hooks/use-object-state";
-import { useBookmark } from "@/hooks/queries/use-bookmark";
 import { Agent, AgentCreateSchema, AgentUpdateSchema } from "app-types/agent";
 import { ChatMention } from "app-types/chat";
 import { MCPServerInfo } from "app-types/mcp";
@@ -32,7 +32,15 @@ import { Textarea } from "ui/textarea";
 import { ScrollArea } from "ui/scroll-area";
 import { Skeleton } from "ui/skeleton";
 import { TextShimmer } from "ui/text-shimmer";
-import { ShareableActions, Visibility } from "@/components/shareable-actions";
+import { Checkbox } from "ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "ui/select";
+import { ShareableActions } from "@/components/shareable-actions";
 import { GenerateAgentDialog } from "./generate-agent-dialog";
 import { AgentIconPicker } from "./agent-icon-picker";
 import { AgentToolSelector } from "./agent-tool-selector";
@@ -62,21 +70,24 @@ const defaultConfig = (): PartialBy<
       systemPrompt: "",
       mentions: [],
     },
+    isTemplate: false,
     visibility: "private",
+    categoryId: null,
   };
 };
 
 interface EditAgentProps {
   initialAgent?: Agent;
   userId: string;
+  userRole?: string | null;
   isOwner?: boolean;
   hasEditAccess?: boolean;
-  isBookmarked?: boolean;
 }
 
 export default function EditAgent({
   initialAgent,
   userId,
+  userRole,
   isOwner = true,
   hasEditAccess = true,
 }: EditAgentProps) {
@@ -86,23 +97,14 @@ export default function EditAgent({
 
   const [openGenerateAgentDialog, setOpenGenerateAgentDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isVisibilityChangeLoading, setIsVisibilityChangeLoading] =
-    useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Initialize agent state with initial data or defaults
   const [agent, setAgent] = useObjectState(initialAgent || defaultConfig());
 
-  const { toggleBookmark, isLoading: isBookmarkToggleLoadingFn } = useBookmark({
-    itemType: "agent",
-  });
-  const isBookmarkToggleLoading = useMemo(
-    () =>
-      (initialAgent?.id && isBookmarkToggleLoadingFn(initialAgent?.id)) ||
-      false,
-    [initialAgent?.id, isBookmarkToggleLoadingFn],
-  );
+  // Fetch categories for template selection
+  const { categories = [], isLoading: isCategoriesLoading } = useCategories();
 
   const { data: mcpList, isLoading: isMcpLoading } = useMcpList();
   const { data: workflowToolList, isLoading: isWorkflowLoading } =
@@ -180,7 +182,7 @@ export default function EditAgent({
         .map(() => AgentCreateSchema.parse({ ...agent, userId }))
         .map(JSON.stringify)
         .map(async (body) => {
-          return fetcher(`/api/agent`, {
+          return fetcher("/api/agent", {
             method: "POST",
             body,
           });
@@ -194,32 +196,6 @@ export default function EditAgent({
         .watch(() => setIsSaving(false));
     }
   }, [agent, userId, mutateAgents, router, initialAgent, t]);
-
-  const updateVisibility = useCallback(
-    async (visibility: Visibility) => {
-      if (initialAgent?.id) {
-        safe(() => setIsVisibilityChangeLoading(true))
-          .map(() => AgentUpdateSchema.parse({ visibility }))
-          .map(JSON.stringify)
-          .map(async (body) =>
-            fetcher(`/api/agent/${initialAgent.id}`, {
-              method: "PUT",
-              body,
-            }),
-          )
-          .ifOk(() => {
-            setAgent({ visibility });
-            mutateAgents({ id: initialAgent.id, visibility });
-            toast.success(t("Agent.visibilityUpdated"));
-          })
-          .ifFail(handleErrorWithToast)
-          .watch(() => setIsVisibilityChangeLoading(false));
-      } else {
-        setAgent({ visibility });
-      }
-    },
-    [initialAgent?.id, mutateAgents, setAgent, setIsVisibilityChangeLoading, t],
-  );
 
   const deleteAgent = useCallback(async () => {
     if (!initialAgent?.id) return;
@@ -241,25 +217,6 @@ export default function EditAgent({
       .ifFail(handleErrorWithToast)
       .watch(() => setIsSaving(false));
   }, [initialAgent?.id, mutateAgents, router, t]);
-
-  const handleBookmarkToggle = useCallback(async () => {
-    if (!initialAgent?.id || isBookmarkToggleLoading) return;
-    safe(async () => {
-      await toggleBookmark({
-        id: initialAgent.id,
-        isBookmarked: agent.isBookmarked,
-      });
-    })
-      .ifOk(() => {
-        setAgent({ isBookmarked: !agent.isBookmarked });
-      })
-      .ifFail(handleErrorWithToast);
-  }, [
-    initialAgent?.id,
-    toggleBookmark,
-    agent.isBookmarked,
-    isBookmarkToggleLoading,
-  ]);
 
   const handleAgentChange = useCallback((generatedData: any) => {
     if (textareaRef.current) {
@@ -298,20 +255,13 @@ export default function EditAgent({
   }, [isMcpLoading, isWorkflowLoading]);
 
   const isLoading = useMemo(() => {
-    return (
-      isLoadingTool ||
-      isSaving ||
-      isVisibilityChangeLoading ||
-      isBookmarkToggleLoading
-    );
-  }, [
-    isLoadingTool,
-    isSaving,
-    isVisibilityChangeLoading,
-    isBookmarkToggleLoading,
-  ]);
+    return isLoadingTool || isSaving;
+  }, [isLoadingTool, isSaving]);
 
   const isGenerating = openGenerateAgentDialog;
+
+  // Check if user is admin
+  const isAdmin = userRole === "admin";
 
   return (
     <ScrollArea className="h-full w-full relative">
@@ -377,15 +327,12 @@ export default function EditAgent({
             {initialAgent && (
               <div className="flex items-center gap-2">
                 <ShareableActions
+                  hideVisibilityAndBookmark={true}
                   type="agent"
-                  visibility={agent.visibility || "private"}
-                  isBookmarked={agent?.isBookmarked || false}
                   isOwner={isOwner}
-                  onVisibilityChange={updateVisibility}
-                  isVisibilityChangeLoading={isVisibilityChangeLoading}
-                  disabled={isLoading}
-                  onBookmarkToggle={handleBookmarkToggle}
-                  isBookmarkToggleLoading={isBookmarkToggleLoading}
+                  editHref={`/agent/${initialAgent.id}`}
+                  onDelete={deleteAgent}
+                  isDeleteLoading={isLoading}
                 />
               </div>
             )}
@@ -443,6 +390,54 @@ export default function EditAgent({
             />
           )}
         </div>
+
+        {/* Template Options - Admin Only */}
+        {isAdmin && hasEditAccess && (
+          <div className="flex flex-col gap-4 mt-4 p-4 border rounded-lg bg-secondary/20">
+            <p className="text-sm font-medium">智能体商店选项</p>
+            
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="is-template"
+                checked={agent.isTemplate || false}
+                disabled={isLoading}
+                onCheckedChange={(checked) =>
+                  setAgent({ 
+                    isTemplate: checked === true,
+                    categoryId: checked === true ? (agent.categoryId ?? null) : null,
+                  })
+                }
+              />
+              <Label htmlFor="is-template" className="cursor-pointer">
+                发布为模板
+              </Label>
+            </div>
+
+            {agent.isTemplate && (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="template-category">模板分类</Label>
+                <Select
+                  value={agent.categoryId ?? ""}
+                  onValueChange={(value) =>
+                    setAgent({ categoryId: value || null })
+                  }
+                  disabled={isLoading || isCategoriesLoading}
+                >
+                  <SelectTrigger id="template-category" className="w-full">
+                    <SelectValue placeholder="选择分类" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.emoji} {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mt-10 flex items-center gap-2">
           <p className="text-sm text-muted-foreground">

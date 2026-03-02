@@ -277,6 +277,19 @@ export function AppSidebarAgents({ userRole }: { userRole?: string | null }) {
             </div>
           )}
         </SidebarMenu>
+      {/* 空白间距 */}
+      <div className="h-4"></div>
+
+      {/* Agent Store - 一级标签 */}
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild className="font-semibold">
+            <Link href="/agent-store" data-testid="agent-store-link">
+              {t("Layout.agentStore")}
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
   );

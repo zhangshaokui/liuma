@@ -13,7 +13,7 @@ import {
 } from "lib/db/pg/schema.pg";
 import { getAuthConfig } from "./config";
 import logger from "logger";
-import { userRepository } from "lib/db/repository";
+import { userRepository, agentGroupRepository } from "lib/db/repository";
 import { DEFAULT_USER_ROLE, USER_ROLES } from "app-types/roles";
 import { admin, editor, user, ac } from "./roles";
 
@@ -68,7 +68,7 @@ const options = {
           const role = isFirstUser ? USER_ROLES.ADMIN : DEFAULT_USER_ROLE;
 
           logger.info(
-            `User creation hook: ${user.email} will get role: ${role} (isFirstUser: ${isFirstUser})`,
+            "User creation hook: " + user.email + " will get role: " + role + " (isFirstUser: " + isFirstUser + ")",
           );
 
           return {
@@ -77,6 +77,15 @@ const options = {
               role,
             },
           };
+        },
+        after: async (user) => {
+          // Auto-create system groups for new users
+          try {
+            await agentGroupRepository.initializeSystemGroups(user.id);
+            logger.info("System groups initialized for user: " + user.email);
+          } catch (error) {
+            logger.error("Failed to initialize system groups for user " + user.email + ":", error);
+          }
         },
       },
     },
@@ -139,7 +148,7 @@ export const getSession = async () => {
 let isFirstUserCache: boolean | null = null;
 
 export const getIsFirstUser = async () => {
-  // If we already know there's at least one user, return false immediately
+  // If we already know there is at least one user, return false immediately
   // This in-memory cache prevents any DB calls once we know users exist
   if (isFirstUserCache === false) {
     return false;

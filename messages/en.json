@@ -333,6 +333,7 @@
     "newChat": "New Chat",
     "mcpConfiguration": "MCP Configuration",
     "agents": "Agents",
+    "agentStore": "AI Talent Market",
     "newAgent": "Create Agent",
     "createAgent": "Create an agent",
     "createYourOwnAgent": "Create your own specialized AI agent with unique features and personality",
@@ -426,7 +427,7 @@
     "generateAgentDetailedGreeting": "Hello! I'll help you create your own agent. What would you like to create? You can write briefly or in detail.",
     "inputPromptHere": "input prompt here...",
     "agentNamePlaceholder": "better-agent",
-    "myAgents": "My Agents",
+    "myAgents": "My AI Employees",
     "bookmarkedAgents": "Bookmarked Agents",
     "sharedAgents": "Shared Agents",
     "availableAgents": "Available Agents",
@@ -457,6 +458,9 @@
     "privateDescription": "Only you can view, edit, and use this agent.",
     "readOnlyDescription": "Others can view and use as a tool, but only you can edit.",
     "publicDescription": "Anyone can view, edit, and use this agent as a tool."
+  },
+  "AgentStore": {
+    "copy": "copy"
   },
   "KeyboardShortcuts": {
     "title": "Keyboard Shortcuts",
